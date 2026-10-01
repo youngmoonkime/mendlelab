@@ -2,7 +2,9 @@
 
 export const triggerHaptic = (pattern: number | number[] = 10) => {
   try {
-    if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+    // 사용자 활성화(첫 탭) 이전 호출은 Chrome이 차단하고 경고를 남기므로 건너뜀
+    const activated = navigator.userActivation?.hasBeenActive ?? true;
+    if (typeof window !== 'undefined' && 'vibrate' in navigator && activated) {
       navigator.vibrate(pattern);
     }
   } catch {
