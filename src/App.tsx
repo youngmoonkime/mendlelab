@@ -1,6 +1,5 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Header } from './components/Header';
-import { Dots } from './components/Navigation/Dots';
 import { HeroSection } from './components/Hero/HeroSection';
 import { PixelSection } from './components/Section/PixelSection';
 import { ModalSheet } from './components/Modal/ModalSheet';
@@ -14,7 +13,6 @@ export const App: React.FC = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [scrolled, setScrolled] = useState(false);
   const [modal, setModal] = useState<ModalType>(null);
-  const scrollerRef = useRef<HTMLDivElement>(null);
 
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     const el = e.currentTarget;
@@ -29,16 +27,6 @@ export const App: React.FC = () => {
       setActiveIndex(nextIdx);
     }
   }, [activeIndex, scrolled]);
-
-  const handleNavigate = useCallback((index: number) => {
-    const el = scrollerRef.current;
-    if (el) {
-      el.scrollTo({
-        top: index * el.clientHeight,
-        behavior: 'smooth'
-      });
-    }
-  }, []);
 
   const handleCloseModal = useCallback(() => setModal(null), []);
 
@@ -63,12 +51,8 @@ export const App: React.FC = () => {
       {/* 반응형 상단 헤더 */}
       <Header />
 
-      {/* 우측 도트 페이지네이션 */}
-      <Dots activeIndex={activeIndex} onNavigate={handleNavigate} />
-
       {/* 메인 풀스크린 스냅 스크롤러 */}
       <div
-        ref={scrollerRef}
         onScroll={handleScroll}
         className={`w-full h-full overflow-y-auto overflow-x-hidden snap-y snap-mandatory overscroll-contain ${
           modal ? 'overflow-hidden' : ''
