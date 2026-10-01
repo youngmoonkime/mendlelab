@@ -69,6 +69,12 @@ html, body {
   }
 }
 
+/* 히어로가 화면 밖에 있을 때 로고의 무한 애니메이션을 멈춰 GPU 부담을 줄임 */
+.stage-paused,
+.stage-paused * {
+  animation-play-state: paused !important;
+}
+
 .preserve-3d {
   transform-style: preserve-3d;
 }

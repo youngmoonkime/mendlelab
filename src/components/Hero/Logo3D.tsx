@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { triggerHaptic } from '../../utils/haptics';
 
 const LAYERS = [
@@ -7,11 +7,69 @@ const LAYERS = [
   { part: 'arrow', src: '/assets/logo_arrow.webp' }
 ] as const;
 
+// 로고 PNG의 실루엣 색상(#211F20)
+const BASE_RGB = [33, 31, 32];
+
+// 예전 CSS filter: invert(k) 를 단색 실루엣에 적용한 결과와 같은 색
+const invertedColor = (k: number) =>
+  `rgb(${BASE_RGB.map((c) => Math.round(c + k * (255 - 2 * c))).join(',')})`;
+
+const imageCache = new Map<string, Promise<HTMLImageElement>>();
+const loadImage = (src: string) => {
+  let p = imageCache.get(src);
+  if (!p) {
+    p = new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = src;
+    });
+    imageCache.set(src, p);
+  }
+  return p;
+};
+
+// 슬라이스마다 CSS filter를 걸면 레이어 45개가 각각 별도 렌더 패스를 갖게 되어,
+// 로고가 화면 밖으로 나갔다 돌아올 때 한꺼번에 다시 그리느라 스크롤이 끊김.
+// 대신 실루엣을 캔버스에 한 번만 해당 색으로 칠해 둠.
+const SliceCanvas: React.FC<{ src: string; color: string; style: React.CSSProperties }> = ({
+  src,
+  color,
+  style
+}) => {
+  const ref = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadImage(src)
+      .then((img) => {
+        const canvas = ref.current;
+        const ctx = canvas?.getContext('2d');
+        if (cancelled || !canvas || !ctx) return;
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        ctx.drawImage(img, 0, 0);
+        ctx.globalCompositeOperation = 'source-in';
+        ctx.fillStyle = color;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      })
+      .catch(() => {
+        // 이미지 로드 실패 시 빈 슬라이스로 둠
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [src, color]);
+
+  return <canvas ref={ref} className="slice-img pointer-events-none" style={style} aria-hidden="true" />;
+};
+
 interface Logo3DProps {
   depth?: number;
+  paused?: boolean;
 }
 
-export const Logo3D: React.FC<Logo3DProps> = ({ depth = 28 }) => {
+export const Logo3D: React.FC<Logo3DProps> = ({ depth = 28, paused = false }) => {
   const [rx, setRx] = useState(0);
   const [ry, setRy] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -84,19 +142,14 @@ export const Logo3D: React.FC<Logo3DProps> = ({ depth = 28 }) => {
   // 3D 슬라이스 레이어 계산
   const slices = useMemo(() => {
     const n = Math.max(1, Math.round(depth / 2));
-    const list: Array<{ transform: string; filter: string }> = [];
+    const list: Array<{ transform: string; color: string }> = [];
     for (let i = n; i >= 0; i--) {
       const z = -(depth * i) / n;
-      let f: string;
-      if (i === 0) {
-        f = 'invert(1) brightness(1.2)';
-      } else {
-        const t = i / n;
-        f = `invert(${(0.55 - t * 0.3).toFixed(2)})`;
-      }
+      // 맨 앞 슬라이스는 흰색(예전 invert(1) brightness(1.2)), 뒤로 갈수록 어두운 회색
+      const color = i === 0 ? '#ffffff' : invertedColor(+(0.55 - (i / n) * 0.3).toFixed(2));
       list.push({
         transform: `translateZ(${z.toFixed(1)}px)`,
-        filter: f
+        color
       });
     }
     return list;
@@ -109,18 +162,7 @@ export const Logo3D: React.FC<Logo3DProps> = ({ depth = 28 }) => {
       LAYERS.map(({ part, src }) => (
         <div key={part} className={`preserve-3d absolute inset-0 part-${part}`}>
           {slices.map((s, idx) => (
-            <img
-              key={idx}
-              className="slice-img pointer-events-none"
-              src={src}
-              alt=""
-              draggable={false}
-              decoding="async"
-              style={{
-                transform: s.transform,
-                filter: s.filter
-              }}
-            />
+            <SliceCanvas key={idx} src={src} color={s.color} style={{ transform: s.transform }} />
           ))}
         </div>
       )),
@@ -132,7 +174,7 @@ export const Logo3D: React.FC<Logo3DProps> = ({ depth = 28 }) => {
       <div 
         className={`stage-3d touch-none ${
           isDragging ? 'cursor-grabbing' : 'cursor-grab'
-        }`}
+        } ${paused ? 'stage-paused' : ''}`}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerEnd}

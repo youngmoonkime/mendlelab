@@ -34,7 +34,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ scrolled }) => {
 
   return (
     <section className="relative z-10 w-full h-[100dvh] snap-start flex flex-col items-center justify-center gap-8 md:gap-14 px-6 py-20 text-center select-none box-border">
-      <Logo3D />
+      <Logo3D paused={scrolled} />
 
       <div className="flex flex-col items-center gap-4 md:gap-6 z-10">
         <h1 
