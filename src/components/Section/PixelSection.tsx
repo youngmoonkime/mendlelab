@@ -19,25 +19,14 @@ export const PixelSection: React.FC<PixelSectionProps> = ({
 
   // 섹션 활성화 시 글자 타이핑 애니메이션
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (isActive) {
+    if (!isActive) {
       setTypedCount(0);
-      const step = () => {
-        setTypedCount((prev) => {
-          const next = prev + 1;
-          if (next < word.length) {
-            timer = setTimeout(step, 110);
-          }
-          return next;
-        });
-      };
-      timer = setTimeout(step, 200);
-    } else {
-      setTypedCount(0);
+      return;
     }
-
+    if (typedCount >= word.length) return;
+    const timer = setTimeout(() => setTypedCount((c) => c + 1), typedCount === 0 ? 200 : 110);
     return () => clearTimeout(timer);
-  }, [isActive, word]);
+  }, [isActive, typedCount, word]);
 
   // 픽셀 그리드 셀 정보 계산
   const pixelCells = useMemo(() => {

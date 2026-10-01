@@ -1,6 +1,12 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { triggerHaptic } from '../../utils/haptics';
 
+const LAYERS = [
+  { part: 'ring', src: '/assets/logo_ring.webp' },
+  { part: 'frame', src: '/assets/logo_frame.webp' },
+  { part: 'arrow', src: '/assets/logo_arrow.webp' }
+] as const;
+
 interface Logo3DProps {
   depth?: number;
 }
@@ -96,6 +102,31 @@ export const Logo3D: React.FC<Logo3DProps> = ({ depth = 28 }) => {
     return list;
   }, [depth]);
 
+  // 슬라이스 이미지(3 x n장)는 회전 각도와 무관하므로 한 번만 생성해
+  // 포인터 이동 시 회전 래퍼만 다시 렌더링되도록 함
+  const layers = useMemo(
+    () =>
+      LAYERS.map(({ part, src }) => (
+        <div key={part} className={`preserve-3d absolute inset-0 part-${part}`}>
+          {slices.map((s, idx) => (
+            <img
+              key={idx}
+              className="slice-img pointer-events-none"
+              src={src}
+              alt=""
+              draggable={false}
+              decoding="async"
+              style={{
+                transform: s.transform,
+                filter: s.filter
+              }}
+            />
+          ))}
+        </div>
+      )),
+    [slices]
+  );
+
   return (
     <div className="flex flex-col items-center select-none">
       <div 
@@ -123,53 +154,7 @@ export const Logo3D: React.FC<Logo3DProps> = ({ depth = 28 }) => {
                 : 'transform 0.65s cubic-bezier(0.18, 0.89, 0.32, 1.28)'
             }}
           >
-            {/* Ring Layer */}
-            <div className="preserve-3d absolute inset-0 part-ring">
-              {slices.map((s, idx) => (
-                <img
-                  key={`ring-${idx}`}
-                  className="slice-img pointer-events-none"
-                  src="/assets/logo_ring.png"
-                  alt=""
-                  style={{
-                    transform: s.transform,
-                    filter: s.filter
-                  }}
-                />
-              ))}
-            </div>
-
-            {/* Frame Layer */}
-            <div className="preserve-3d absolute inset-0 part-frame">
-              {slices.map((s, idx) => (
-                <img
-                  key={`frame-${idx}`}
-                  className="slice-img pointer-events-none"
-                  src="/assets/logo_frame.png"
-                  alt=""
-                  style={{
-                    transform: s.transform,
-                    filter: s.filter
-                  }}
-                />
-              ))}
-            </div>
-
-            {/* Arrow Layer */}
-            <div className="preserve-3d absolute inset-0 part-arrow">
-              {slices.map((s, idx) => (
-                <img
-                  key={`arrow-${idx}`}
-                  className="slice-img pointer-events-none"
-                  src="/assets/logo_arrow.png"
-                  alt=""
-                  style={{
-                    transform: s.transform,
-                    filter: s.filter
-                  }}
-                />
-              ))}
-            </div>
+            {layers}
           </div>
         </div>
       </div>

@@ -25,21 +25,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ scrolled }) => {
   const [typedCount, setTypedCount] = useState(0);
 
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    const step = () => {
-      setTypedCount((prev) => {
-        const next = prev + 1;
-        if (next < FULL_TEXT.length) {
-          const char = FULL_TEXT.charAt(next - 1);
-          timer = setTimeout(step, char === ' ' ? 150 : 85);
-        }
-        return next;
-      });
-    };
-
-    timer = setTimeout(step, 1600);
+    if (typedCount >= FULL_TEXT.length) return;
+    const delay =
+      typedCount === 0 ? 1600 : FULL_TEXT.charAt(typedCount - 1) === ' ' ? 150 : 85;
+    const timer = setTimeout(() => setTypedCount((c) => c + 1), delay);
     return () => clearTimeout(timer);
-  }, []);
+  }, [typedCount]);
 
   return (
     <section className="relative z-10 w-full h-[100dvh] snap-start flex flex-col items-center justify-center gap-8 md:gap-14 px-6 py-20 text-center select-none box-border">

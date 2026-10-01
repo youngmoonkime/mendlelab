@@ -40,6 +40,8 @@ export const App: React.FC = () => {
     }
   }, []);
 
+  const handleCloseModal = useCallback(() => setModal(null), []);
+
   const getModalTitle = (type: ModalType) => {
     switch (type) {
       case 'play':
@@ -90,7 +92,7 @@ export const App: React.FC = () => {
       <ModalSheet
         isOpen={modal !== null}
         title={getModalTitle(modal)}
-        onClose={() => setModal(null)}
+        onClose={handleCloseModal}
       >
         {modal === 'play' && <CatchGame />}
         {modal === 'space' && <RoomStudio />}

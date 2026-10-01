@@ -15,7 +15,7 @@ export const CatchGame: React.FC = () => {
   });
 
   const dirRef = useRef<number>(0);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const spawnTimerRef = useRef<number>(10);
   const nextIdRef = useRef<number>(1);
   const gameStateRef = useRef(game);

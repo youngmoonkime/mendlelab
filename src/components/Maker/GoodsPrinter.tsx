@@ -12,7 +12,7 @@ export const GoodsPrinter: React.FC = () => {
     status: 'idle'
   });
 
-  const printTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const printTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const stopPrint = () => {
     if (printTimerRef.current) {
