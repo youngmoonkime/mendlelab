@@ -1,0 +1,209 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+:root {
+  --ink: #FFFFFF;
+  --ground: #000000;
+  --line: rgba(255, 255, 255, 0.04);
+  --muted: rgba(255, 255, 255, 0.62);
+  --shadow: rgba(255, 255, 255, 0.10);
+  --pixside: #3b3a38;
+  --tint: #F28C28;
+  --ios-bg: #1C1C1E;
+  --ios-fill: #2C2C2E;
+  --ios-fill2: rgba(118, 118, 128, 0.24);
+  --ios-label: #FFFFFF;
+  --ios-label2: rgba(235, 235, 245, 0.6);
+  --ios-sep: rgba(84, 84, 88, 0.6);
+}
+
+html, body {
+  height: 100%;
+  background: #000000;
+  margin: 0;
+  padding: 0;
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+/* Background Grid Pattern */
+.bg-grid-night {
+  background-color: #000000;
+  background-image: 
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px),
+    radial-gradient(ellipse 70% 55% at 50% 40%, rgba(255, 255, 255, 0.07) 0%, rgba(0, 0, 0, 0) 65%),
+    linear-gradient(180deg, #121110 0%, #050505 55%, #000000 100%);
+  background-size: 32px 32px, 32px 32px, 100% 100%, 100% 100%;
+}
+
+/* Aura Background Glow */
+.aura-glow {
+  position: fixed;
+  inset: -25%;
+  z-index: 0;
+  pointer-events: none;
+  background: 
+    radial-gradient(32% 28% at 50% 42%, rgba(255, 255, 255, 0.10), rgba(0, 0, 0, 0) 70%),
+    conic-gradient(from 210deg at 50% 46%, rgba(201, 184, 152, 0.16), rgba(110, 120, 140, 0.12) 22%, rgba(0, 0, 0, 0) 45%, rgba(0, 0, 0, 0) 60%, rgba(150, 140, 125, 0.10) 80%, rgba(201, 184, 152, 0.16));
+  filter: blur(70px);
+  animation: aura 28s linear infinite;
+}
+
+/* 3D Stage & Layers */
+.stage-3d {
+  position: relative;
+  width: min(440px, 72vw);
+  aspect-ratio: 1050/1008;
+  perspective: 1400px;
+}
+
+@media (max-width: 640px) {
+  .stage-3d {
+    width: min(340px, 78vw);
+  }
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.slice-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+  backface-visibility: visible;
+}
+
+.part-frame {
+  animation: frameIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.part-ring {
+  animation: ringIn 0.9s cubic-bezier(0.6, 0, 0.2, 1) 0.5s both;
+}
+
+.part-arrow {
+  animation: arrowIn 0.55s cubic-bezier(0.3, 1.5, 0.5, 1) 1.3s both, nudge 4.5s ease-in-out 3s infinite;
+}
+
+.stage-floor {
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: -9%;
+  height: 9%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, var(--shadow) 0%, rgba(0, 0, 0, 0) 70%);
+  filter: blur(6px);
+  animation: floorIn 0.7s ease both;
+}
+
+/* Caret blinking */
+.caret-blink {
+  display: inline-block;
+  width: 0.55em;
+  height: 0.9em;
+  margin-left: 0.12em;
+  vertical-align: -0.08em;
+  background: currentColor;
+  animation: blink 1.05s steps(1, end) infinite;
+}
+
+/* Pixel Grids */
+.pixel-matrix {
+  --cell: 12px;
+  position: relative;
+}
+
+@media (max-width: 640px) {
+  .pixel-matrix {
+    --cell: 9px;
+  }
+}
+
+.pix-unit {
+  position: absolute;
+  width: calc(var(--cell) - 1px);
+  height: calc(var(--cell) - 1px);
+  background: #FFFFFF;
+  box-shadow: 2px 2px 0 var(--pixside);
+  transform: scale(0);
+  transition: transform 0.35s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+.pixels-lit .pix-unit {
+  transform: scale(1);
+}
+
+/* Sprites & Container Queries */
+.cq-container {
+  container-type: inline-size;
+  position: relative;
+  overflow: hidden;
+}
+
+.spr-pixel {
+  position: absolute;
+  width: 1em;
+  height: 1em;
+  margin: -1em 0 0 -1em;
+  pointer-events: none;
+}
+
+.game-field {
+  position: absolute;
+  inset: 0;
+  font-size: calc(100cqw / 60);
+}
+
+.room-field {
+  position: absolute;
+  inset: 0;
+  font-size: calc(100cqw / 64);
+}
+
+/* Keyframes */
+@keyframes frameIn {
+  from { transform: translateZ(-900px) rotateY(-50deg) scale(0.4); }
+  to { transform: none; }
+}
+
+@keyframes ringIn {
+  from { transform: translateZ(-500px) rotateZ(-200deg) scale(0); }
+  to { transform: none; }
+}
+
+@keyframes arrowIn {
+  from { transform: translate3d(0, -70%, 260px) scale(0); }
+  to { transform: none; }
+}
+
+@keyframes floorIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.6s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

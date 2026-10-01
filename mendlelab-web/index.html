@@ -1,0 +1,800 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="MENDLELAB, Jeju. Play, Space, Make — is coming.">
+<meta property="og:title" content="MENDLELAB">
+<meta property="og:description" content="Play, Space, Make — is coming.">
+<meta property="og:image" content="assets/logo.png">
+<title>MENDLELAB</title>
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="apple-touch-icon" href="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen&family=IBM+Plex+Sans+KR:wght@400;500&display=swap" rel="stylesheet">
+<style>
+html,body{height:100%;background:#000}
+body{margin:0}
+a{color:#231F20}a:hover{color:#5a5452}
+.page{--ink:#231F20;--ground:#EDECE8;--line:rgba(35,31,32,.06);--muted:#5a5452;--shadow:rgba(35,31,32,.28);--pixside:#8f8a85;
+  background-color:var(--ground);color:var(--ink);
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:32px 32px}
+.page.night{--ink:#FFFFFF;--ground:#000000;--line:rgba(255,255,255,.035);--muted:rgba(255,255,255,.62);--shadow:rgba(255,255,255,.10);--pixside:#3b3a38;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px),
+  radial-gradient(ellipse 70% 55% at 50% 40%,rgba(255,255,255,.07) 0%,rgba(0,0,0,0) 65%),
+  linear-gradient(180deg,#121110 0%,#050505 55%,#000 100%);
+  background-size:32px 32px,32px 32px,100% 100%,100% 100%}
+.night a{color:#FFFFFF}.night a:hover{color:rgba(255,255,255,.75)}
+.scroller{height:100vh;height:100dvh;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scroll-snap-type:y mandatory}
+.sec{position:relative;z-index:1;height:100vh;height:100dvh;scroll-snap-align:start;box-sizing:border-box}
+.aura{display:none}
+.night .aura{display:block;position:fixed;inset:-25%;z-index:0;pointer-events:none;
+  background:radial-gradient(32% 28% at 50% 42%,rgba(255,255,255,.10),rgba(0,0,0,0) 70%),
+  conic-gradient(from 210deg at 50% 46%,rgba(201,184,152,.16),rgba(110,120,140,.12) 22%,rgba(0,0,0,0) 45%,rgba(0,0,0,0) 60%,rgba(150,140,125,.10) 80%,rgba(201,184,152,.16));
+  filter:blur(70px);animation:aura 28s linear infinite}
+.page-head{position:fixed;top:0;left:0;right:0;z-index:2;pointer-events:none}
+.stage{position:relative;width:min(440px,72vw);aspect-ratio:1050/1008;perspective:1400px}
+.sway,.tilt,.part{position:absolute;inset:0;transform-style:preserve-3d}
+.sway{animation:sway 9s ease-in-out 2s infinite alternate}
+.tilt{transition:transform .35s cubic-bezier(.2,.7,.2,1)}
+.slice{position:absolute;inset:0;width:100%;height:100%;display:block;user-select:none;-webkit-user-drag:none;backface-visibility:visible}
+.part-frame{animation:frameIn .7s cubic-bezier(.2,.8,.2,1) both}
+.part-ring{animation:ringIn .9s cubic-bezier(.6,0,.2,1) .5s both}
+.part-arrow{animation:arrowIn .55s cubic-bezier(.3,1.5,.5,1) 1.3s both,nudge 4.5s ease-in-out 3s infinite}
+.floor{position:absolute;left:12%;right:12%;bottom:-9%;height:9%;border-radius:50%;background:radial-gradient(ellipse at center,var(--shadow) 0%,rgba(0,0,0,0) 70%);filter:blur(6px);animation:floorIn .7s ease both}
+.caret{display:inline-block;width:.55em;height:.9em;margin-left:.12em;vertical-align:-.08em;background:currentColor;animation:blink 1.05s steps(1,end) infinite}
+.reveal-late{animation:fadeUp .6s ease 2.6s both}
+.ig{display:inline-flex;align-items:center;min-height:44px;padding:0 6px;text-underline-offset:4px}
+.ig:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+.hint-wrap{animation:fadeUp .6s ease 3.2s both}
+.hint{display:flex;flex-direction:column;align-items:center;gap:10px;font-family:Silkscreen,'Courier New',monospace;font-size:13px;letter-spacing:.06em;color:var(--muted);transition:opacity .4s ease}
+.hint-arrow{width:14px;height:22px;animation:hintBob 1.8s ease-in-out infinite}
+.pixels{--cell:12px;position:relative}
+.pix{position:absolute;width:calc(var(--cell) - 1px);height:calc(var(--cell) - 1px);background:var(--ink);box-shadow:2px 2px 0 var(--pixside);transform:scale(0);transition:transform .35s cubic-bezier(.3,1.6,.5,1)}
+.pixels.lit .pix{transform:scale(1)}
+.word{margin:0;font-family:Silkscreen,'Courier New',monospace;font-weight:400;font-size:clamp(44px,8vw,96px);line-height:1;letter-spacing:.04em}
+.scroller.locked{overflow:hidden}
+.icon-open{appearance:none;background:none;border:0;padding:16px;margin:0;color:inherit;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:28px;border-radius:16px;transition:transform .2s ease}
+.icon-open:hover{transform:translateY(-4px)}
+.icon-open:focus-visible{outline:2px solid currentColor;outline-offset:6px}
+.cta{font-size:15px;color:var(--muted);display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px;border:1px solid var(--line-strong,rgba(255,255,255,.22));border-radius:999px}
+.icon-open:hover .cta{color:var(--ink);border-color:var(--ink)}
+.modal{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.78);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);outline:none;animation:fadeIn .25s ease both}
+.page:not(.night) .modal{background:rgba(237,236,232,.85)}
+.panel{position:relative;width:min(720px,100%);max-height:calc(100dvh - 32px);overflow:auto;box-sizing:border-box;padding:24px clamp(16px,3vw,32px) 28px;border-radius:20px;background:#121212;border:1px solid rgba(255,255,255,.12);color:#fff;display:flex;flex-direction:column;align-items:center;gap:20px;animation:popIn .3s cubic-bezier(.2,.8,.2,1) both}
+.page:not(.night) .panel{background:#F7F6F2;border-color:rgba(35,31,32,.15);color:#231F20}
+.panel-head{align-self:stretch;display:flex;justify-content:space-between;align-items:center;gap:16px}
+.panel-title{margin:0;font-family:Silkscreen,'Courier New',monospace;font-weight:400;font-size:22px;letter-spacing:.03em}
+.icon-btn{appearance:none;background:none;border:1px solid currentColor;color:inherit;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;cursor:pointer;opacity:.8}
+.icon-btn:hover{opacity:1}
+.btn{appearance:none;font:inherit;font-size:14px;color:inherit;background:transparent;border:1px solid rgba(127,127,127,.55);border-radius:999px;min-height:40px;padding:0 16px;cursor:pointer}
+.btn[aria-pressed="true"]{background:currentColor}
+.btn[aria-pressed="true"] span{color:#121212}
+.page:not(.night) .btn[aria-pressed="true"] span{color:#F7F6F2}
+.btn-primary{background:#F28C28;border-color:#F28C28;color:#121212;font-weight:500;min-height:46px;padding:0 26px}
+.btn-primary:disabled{opacity:.45;cursor:default}
+.btn:focus-visible,.icon-btn:focus-visible,.swatch:focus-visible{outline:2px solid #F28C28;outline-offset:3px}
+.swatch{appearance:none;width:36px;height:36px;border-radius:50%;border:2px solid rgba(127,127,127,.5);cursor:pointer;padding:0}
+.swatch[aria-pressed="true"]{border-color:currentColor;box-shadow:0 0 0 3px rgba(127,127,127,.35)}
+.row{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px}
+.note{margin:0;font-size:14px;line-height:1.6;opacity:.75;text-align:center}
+.spr{position:absolute;width:1em;height:1em;margin:-1em 0 0 -1em;pointer-events:none}
+.cq{container-type:inline-size;position:relative;overflow:hidden}
+.field{position:absolute;inset:0;font-size:5px;font-size:calc(100cqw / 60)}
+.room-field{position:absolute;inset:0;font-size:8px;font-size:calc(100cqw / 64)}
+.game{width:min(340px,82vw,calc((100dvh - 300px) * .75));aspect-ratio:60/80;border-radius:14px;background:linear-gradient(180deg,#1b2a33 0%,#26404a 60%,#2f4a3a 100%);touch-action:none;cursor:none}
+.game-over{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px;text-align:center;background:rgba(0,0,0,.55);color:#fff;cursor:default}
+.hud{display:flex;gap:18px;font-family:Silkscreen,'Courier New',monospace;font-size:14px;letter-spacing:.04em}
+.pad{display:none;gap:16px}
+.pad .btn{min-width:72px;min-height:52px;font-size:18px;touch-action:none}
+@media (hover:none){.pad{display:flex}.game{cursor:default}}
+.room{width:min(640px,84vw);aspect-ratio:64/44;border-radius:14px;transition:background-color .4s ease}
+.floor-band{position:absolute;left:0;right:0;top:34em;bottom:0;background:#8A5E3B;box-shadow:inset 0 .35em 0 #6E4A2E}
+.lamp-glow{position:absolute;width:36em;height:36em;border-radius:50%;background:radial-gradient(circle,rgba(255,214,140,.55) 0%,rgba(255,214,140,0) 62%);pointer-events:none}
+.item{position:absolute;appearance:none;font-size:inherit;line-height:1;color:inherit;background:none;border:0;padding:0;margin:0;cursor:grab;touch-action:none;border-radius:.6em;outline-offset:.3em}
+.item:hover{outline:1px dashed rgba(255,255,255,.55)}
+.item:focus-visible{outline:2px solid #F28C28}
+.item.dragging{cursor:grabbing;outline:2px dashed #F28C28}
+.dim{position:absolute;inset:0;background:rgba(8,10,20,.62);pointer-events:none;transition:opacity .3s ease}
+.printer{position:relative;width:220px;height:240px;border:3px solid #9A958F;border-radius:10px;box-sizing:border-box;display:flex;align-items:flex-end;justify-content:center;padding-bottom:22px;background:rgba(127,127,127,.08)}
+.printer-bed{position:absolute;left:14px;right:14px;bottom:12px;height:8px;background:#9A958F;border-radius:2px}
+.print-obj{position:relative;font-size:14px}
+.print-line{position:absolute;left:-12px;right:-12px;height:2px;background:#F28C28;box-shadow:0 0 10px #F28C28}
+.done-note{animation:fadeUp .5s ease both}
+@media (max-width:600px){.print-obj{font-size:11px}.printer{width:180px;height:200px}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes popIn{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes frameIn{from{transform:translateZ(-900px) rotateY(-50deg) scale(.4)}to{transform:none}}
+@keyframes ringIn{from{transform:translateZ(-500px) rotateZ(-200deg) scale(0)}to{transform:none}}
+@keyframes arrowIn{from{transform:translate3d(0,-70%,260px) scale(0)}to{transform:none}}
+@keyframes nudge{0%,80%,100%{transform:none}88%{transform:translate3d(0,3%,12px)}}
+@keyframes sway{from{transform:rotateY(-12deg) rotateX(4deg)}to{transform:rotateY(12deg) rotateX(-3deg)}}
+@keyframes aura{from{transform:rotate(0deg) scale(1)}50%{transform:rotate(180deg) scale(1.08)}to{transform:rotate(360deg) scale(1)}}
+@keyframes blink{0%,50%{opacity:1}50.01%,100%{opacity:0}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes floorIn{from{opacity:0}to{opacity:1}}
+@keyframes hintBob{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
+@media (max-width:600px){
+  .stage{width:min(360px,80vw)}
+  .hero{gap:40px !important}
+  .page-head{font-size:13px !important}
+  .pixels{--cell:9px}
+}
+@media (max-width:600px) and (max-height:700px){.stage{width:min(300px,66vw)}}
+@media (prefers-reduced-motion:reduce){.caret,.aura,.sway,.part-frame,.part-ring,.part-arrow,.floor,.reveal-late,.hint-wrap,.hint-arrow{animation:none}.tilt,.pix{transition:none}}
+/* ---------- iOS UI layer ---------- */
+.page{--ios-bg:#1C1C1E;--ios-fill:#2C2C2E;--ios-fill2:rgba(118,118,128,.24);--ios-label:#FFFFFF;--ios-label2:rgba(235,235,245,.6);--ios-sep:rgba(84,84,88,.6);--tint:#F28C28;
+  -webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+.page:not(.night){--ios-bg:#F2F2F7;--ios-fill:#FFFFFF;--ios-fill2:rgba(118,118,128,.12);--ios-label:#000000;--ios-label2:rgba(60,60,67,.6);--ios-sep:rgba(60,60,67,.29)}
+.page button{touch-action:manipulation;-webkit-user-select:none;user-select:none}
+.page-head{padding-top:max(28px,calc(env(safe-area-inset-top) + 12px)) !important;padding-left:max(clamp(20px,4vw,48px),env(safe-area-inset-left)) !important;padding-right:max(clamp(20px,4vw,48px),env(safe-area-inset-right)) !important}
+.hint-wrap{bottom:max(28px,calc(env(safe-area-inset-bottom) + 16px)) !important}
+.icon-open:active,.btn:active,.ios-btn:active,.seg-btn:active,.pad-btn:active,.switch-cell:active,.dot:active{transform:scale(.96)}
+.icon-open,.btn,.ios-btn,.pad-btn{transition:transform .12s ease,background-color .2s ease,opacity .2s ease}
+@media (hover:none){.icon-open:hover{transform:none}.icon-open:hover .cta{color:var(--muted);border-color:var(--line-strong,rgba(255,255,255,.22))}.item:hover{outline:none}}
+/* page control */
+.dots{position:fixed;right:max(14px,env(safe-area-inset-right));top:50%;transform:translateY(-50%);z-index:3;display:flex;flex-direction:column;gap:2px;padding:6px 0;border-radius:999px;background:var(--ios-fill2);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.dot{appearance:none;background:none;border:0;width:28px;height:28px;display:grid;place-items:center;cursor:pointer;padding:0}
+.dot span{width:7px;height:7px;border-radius:50%;background:var(--ink);opacity:.3;transition:opacity .25s ease,transform .25s ease}
+.dot[aria-current="true"] span{opacity:1;transform:scale(1.15)}
+.dot:focus-visible{outline:2px solid var(--tint);outline-offset:-2px;border-radius:50%}
+/* motion permission pill */
+.motion-btn{appearance:none;font:inherit;font-size:14px;color:var(--ink);background:var(--ios-fill2);border:0;border-radius:999px;min-height:36px;padding:0 14px;display:inline-flex;align-items:center;gap:8px;cursor:pointer;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+/* sheet */
+.modal{align-items:center;padding:16px;background:rgba(0,0,0,.45);animation:fadeIn .25s ease both}
+.page:not(.night) .modal{background:rgba(0,0,0,.25)}
+.panel,.page:not(.night) .panel{background:var(--ios-bg);color:var(--ios-label);border:0;border-radius:14px;width:min(560px,100%);gap:16px;padding:12px 16px calc(20px + env(safe-area-inset-bottom));font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','IBM Plex Sans KR',sans-serif;box-shadow:0 20px 60px rgba(0,0,0,.45);animation:sheetIn .38s cubic-bezier(.32,.72,0,1) backwards;transition:transform .3s cubic-bezier(.32,.72,0,1)}
+.panel.dragging{transition:none}
+.grabber-zone{align-self:stretch;display:flex;flex-direction:column;align-items:center;gap:10px;touch-action:none;cursor:grab}
+.grabber{width:36px;height:5px;border-radius:3px;background:var(--ios-label2);opacity:.5;display:none}
+.panel-head{position:relative;justify-content:center;min-height:44px}
+.panel-title{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','IBM Plex Sans KR',sans-serif;font-size:17px;font-weight:600;letter-spacing:-.02em}
+.icon-btn{position:absolute;right:0;top:50%;transform:translateY(-50%);border:0;width:44px;height:44px;opacity:1;background:none;padding:0}
+.icon-btn .xm{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--ios-fill2);color:var(--ios-label2)}
+.note{color:var(--ios-label2);opacity:1;font-size:13px}
+.group{align-self:stretch;background:var(--ios-fill);border-radius:12px;overflow:hidden}
+.group-label{align-self:stretch;margin:4px 16px -8px;font-size:13px;color:var(--ios-label2);text-transform:none}
+.cell{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:8px 16px;box-sizing:border-box;font-size:17px;letter-spacing:-.02em}
+.cell + .cell{box-shadow:inset 16px 1px 0 var(--ios-fill),inset 0 1px 0 var(--ios-sep)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:12px 16px;scroll-snap-type:x proximity;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;scroll-snap-align:start;appearance:none;font:inherit;font-size:15px;color:var(--ios-label);background:var(--ios-fill2);border:0;border-radius:999px;min-height:36px;padding:0 14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.chip[aria-pressed="true"]{background:var(--tint);color:#000}
+.chip:focus-visible{outline:2px solid var(--tint);outline-offset:2px}
+.seg{display:flex;flex:1;max-width:320px;padding:2px;border-radius:9px;background:var(--ios-fill2)}
+.seg-btn{flex:1;appearance:none;font:inherit;font-size:13px;font-weight:500;color:var(--ios-label);background:transparent;border:0;border-radius:7px;min-height:32px;cursor:pointer}
+.seg-btn[aria-pressed="true"]{background:#636366;box-shadow:0 3px 8px rgba(0,0,0,.12),0 3px 1px rgba(0,0,0,.04)}
+.page:not(.night) .seg-btn[aria-pressed="true"]{background:#FFFFFF}
+.seg-btn:disabled{opacity:.5}
+.seg-btn:focus-visible{outline:2px solid var(--tint);outline-offset:1px}
+.swatches{display:flex;gap:10px}
+.swatch{width:30px;height:30px;border:0;box-shadow:inset 0 0 0 1px rgba(127,127,127,.4)}
+.swatch[aria-pressed="true"]{box-shadow:0 0 0 2px var(--ios-fill),0 0 0 4px var(--tint)}
+.switch-cell{appearance:none;width:100%;background:none;border:0;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.switch{position:relative;width:51px;height:31px;border-radius:999px;background:var(--ios-fill2);transition:background-color .25s ease;flex:0 0 auto}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.15),0 3px 1px rgba(0,0,0,.06);transition:transform .25s cubic-bezier(.32,.72,0,1)}
+.switch-cell[aria-checked="true"] .switch{background:#34C759}
+.switch-cell[aria-checked="true"] .switch::after{transform:translateX(20px)}
+.switch-cell:focus-visible{outline:2px solid var(--tint);outline-offset:-2px}
+.link-cell{appearance:none;width:100%;background:none;border:0;font:inherit;color:var(--tint);text-align:left;cursor:pointer}
+.ios-btn{appearance:none;align-self:stretch;font:inherit;font-size:17px;font-weight:600;color:#000;background:var(--tint);border:0;border-radius:14px;min-height:50px;cursor:pointer}
+.ios-btn:disabled{opacity:.4;cursor:default}
+.ios-btn:focus-visible{outline:2px solid var(--ios-label);outline-offset:2px}
+.btn-primary{border-radius:14px;min-height:50px;font-size:17px;font-weight:600}
+.hud{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;gap:8px}
+.hud span{background:var(--ios-fill2);border-radius:999px;padding:6px 12px}
+.game{border-radius:12px;-webkit-user-select:none;user-select:none}
+.pad{gap:28px}
+.pad-btn{appearance:none;width:72px;height:72px;border-radius:50%;border:0;background:var(--ios-fill2);color:var(--ios-label);display:grid;place-items:center;cursor:pointer;touch-action:none;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.pad-btn:focus-visible{outline:2px solid var(--tint);outline-offset:2px}
+.room,.printer{border-radius:12px}
+.printer{background:var(--ios-fill)}
+@keyframes sheetIn{from{opacity:0;transform:translateY(24px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
+@media (max-width:600px){
+  .modal{align-items:flex-end;padding:0}
+  .panel,.page:not(.night) .panel{width:100%;max-height:calc(100dvh - max(44px, env(safe-area-inset-top) + 10px));border-radius:16px 16px 0 0;padding-top:6px;animation:sheetUp .42s cubic-bezier(.32,.72,0,1) backwards}
+  .grabber{display:block}
+  .dots{right:max(8px,env(safe-area-inset-right))}
+  .game{width:min(340px,86vw,calc((100dvh - 360px) * .75))}
+  .room{width:100%}
+}
+@media (prefers-reduced-motion:reduce){.panel{animation:none}.switch,.switch::after{transition:none}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="vendor/htm-preact-standalone.umd.js"></script>
+<script>
+const { html, render, Component } = window.htmPreact;
+
+class MendlelabApp extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { rx: 0, ry: 0, typedCount: 0, active: 0, secCount: 0, scrolled: false, modal: null,
+      g: { status: 'ready', x: 30, items: [], score: 0, lives: 3, best: 0 },
+      room: { on: { sofa: true, lamp: true, frame: true, plant: false, rug: false, shelf: false, cat: false }, wall: 'white', light: true, pos: null, order: null, drag: null },
+      mk: { shape: 'heart', color: 'tang', p: 0, status: 'idle' } };
+    this.spr = {"tang": {"w": 8, "h": 7, "sh": "4em 1em 0 #6E9B4F, 3em 2em 0 #6E9B4F, 4em 2em 0 #6E9B4F, 2em 3em 0 #F28C28, 3em 3em 0 #F28C28, 4em 3em 0 #F28C28, 5em 3em 0 #F28C28, 6em 3em 0 #F28C28, 1em 4em 0 #F28C28, 2em 4em 0 #F28C28, 3em 4em 0 #F28C28, 4em 4em 0 #F28C28, 5em 4em 0 #F28C28, 6em 4em 0 #F28C28, 7em 4em 0 #F28C28, 1em 5em 0 #F28C28, 2em 5em 0 #F28C28, 3em 5em 0 #F28C28, 4em 5em 0 #F28C28, 5em 5em 0 #F28C28, 6em 5em 0 #F28C28, 7em 5em 0 #F28C28, 8em 5em 0 #D06A10, 1em 6em 0 #F28C28, 2em 6em 0 #F28C28, 3em 6em 0 #F28C28, 4em 6em 0 #F28C28, 5em 6em 0 #F28C28, 6em 6em 0 #F28C28, 7em 6em 0 #D06A10, 3em 7em 0 #D06A10, 4em 7em 0 #D06A10, 5em 7em 0 #D06A10, 6em 7em 0 #D06A10"}, "stone": {"w": 7, "h": 6, "sh": "2em 1em 0 #77736F, 3em 1em 0 #77736F, 4em 1em 0 #77736F, 5em 1em 0 #77736F, 6em 1em 0 #77736F, 1em 2em 0 #77736F, 2em 2em 0 #77736F, 3em 2em 0 #3A3836, 4em 2em 0 #77736F, 5em 2em 0 #77736F, 6em 2em 0 #77736F, 7em 2em 0 #77736F, 1em 3em 0 #77736F, 2em 3em 0 #77736F, 3em 3em 0 #77736F, 4em 3em 0 #77736F, 5em 3em 0 #77736F, 6em 3em 0 #3A3836, 7em 3em 0 #77736F, 1em 4em 0 #77736F, 2em 4em 0 #3A3836, 3em 4em 0 #77736F, 4em 4em 0 #77736F, 5em 4em 0 #77736F, 6em 4em 0 #77736F, 7em 4em 0 #77736F, 1em 5em 0 #77736F, 2em 5em 0 #77736F, 3em 5em 0 #77736F, 4em 5em 0 #77736F, 5em 5em 0 #3A3836, 6em 5em 0 #77736F, 2em 6em 0 #77736F, 3em 6em 0 #77736F, 4em 6em 0 #77736F, 5em 6em 0 #77736F"}, "basket": {"w": 14, "h": 5, "sh": "1em 1em 0 #C08A52, 14em 1em 0 #C08A52, 1em 2em 0 #C08A52, 2em 2em 0 #C08A52, 13em 2em 0 #C08A52, 14em 2em 0 #C08A52, 1em 3em 0 #C08A52, 2em 3em 0 #C08A52, 3em 3em 0 #C08A52, 4em 3em 0 #C08A52, 5em 3em 0 #C08A52, 6em 3em 0 #C08A52, 7em 3em 0 #C08A52, 8em 3em 0 #C08A52, 9em 3em 0 #C08A52, 10em 3em 0 #C08A52, 11em 3em 0 #C08A52, 12em 3em 0 #C08A52, 13em 3em 0 #C08A52, 14em 3em 0 #C08A52, 2em 4em 0 #8A5A2E, 3em 4em 0 #8A5A2E, 4em 4em 0 #8A5A2E, 5em 4em 0 #8A5A2E, 6em 4em 0 #8A5A2E, 7em 4em 0 #8A5A2E, 8em 4em 0 #8A5A2E, 9em 4em 0 #8A5A2E, 10em 4em 0 #8A5A2E, 11em 4em 0 #8A5A2E, 12em 4em 0 #8A5A2E, 13em 4em 0 #8A5A2E, 3em 5em 0 #8A5A2E, 4em 5em 0 #8A5A2E, 5em 5em 0 #8A5A2E, 6em 5em 0 #8A5A2E, 7em 5em 0 #8A5A2E, 8em 5em 0 #8A5A2E, 9em 5em 0 #8A5A2E, 10em 5em 0 #8A5A2E, 11em 5em 0 #8A5A2E, 12em 5em 0 #8A5A2E"}, "frame": {"w": 12, "h": 9, "sh": "1em 1em 0 #5A3E2B, 2em 1em 0 #5A3E2B, 3em 1em 0 #5A3E2B, 4em 1em 0 #5A3E2B, 5em 1em 0 #5A3E2B, 6em 1em 0 #5A3E2B, 7em 1em 0 #5A3E2B, 8em 1em 0 #5A3E2B, 9em 1em 0 #5A3E2B, 10em 1em 0 #5A3E2B, 11em 1em 0 #5A3E2B, 12em 1em 0 #5A3E2B, 1em 2em 0 #5A3E2B, 2em 2em 0 #CFE3EA, 3em 2em 0 #CFE3EA, 4em 2em 0 #CFE3EA, 5em 2em 0 #CFE3EA, 6em 2em 0 #CFE3EA, 7em 2em 0 #CFE3EA, 8em 2em 0 #CFE3EA, 9em 2em 0 #CFE3EA, 10em 2em 0 #CFE3EA, 11em 2em 0 #CFE3EA, 12em 2em 0 #5A3E2B, 1em 3em 0 #5A3E2B, 2em 3em 0 #CFE3EA, 3em 3em 0 #CFE3EA, 4em 3em 0 #FFFFFF, 5em 3em 0 #FFFFFF, 6em 3em 0 #CFE3EA, 7em 3em 0 #CFE3EA, 8em 3em 0 #CFE3EA, 9em 3em 0 #CFE3EA, 10em 3em 0 #CFE3EA, 11em 3em 0 #CFE3EA, 12em 3em 0 #5A3E2B, 1em 4em 0 #5A3E2B, 2em 4em 0 #CFE3EA, 3em 4em 0 #CFE3EA, 4em 4em 0 #CFE3EA, 5em 4em 0 #CFE3EA, 6em 4em 0 #CFE3EA, 7em 4em 0 #CFE3EA, 8em 4em 0 #CFE3EA, 9em 4em 0 #CFE3EA, 10em 4em 0 #CFE3EA, 11em 4em 0 #CFE3EA, 12em 4em 0 #5A3E2B, 1em 5em 0 #5A3E2B, 2em 5em 0 #CFE3EA, 3em 5em 0 #CFE3EA, 4em 5em 0 #CFE3EA, 5em 5em 0 #CFE3EA, 6em 5em 0 #5E8C4A, 7em 5em 0 #5E8C4A, 8em 5em 0 #CFE3EA, 9em 5em 0 #CFE3EA, 10em 5em 0 #CFE3EA, 11em 5em 0 #CFE3EA, 12em 5em 0 #5A3E2B, 1em 6em 0 #5A3E2B, 2em 6em 0 #CFE3EA, 3em 6em 0 #CFE3EA, 4em 6em 0 #5E8C4A, 5em 6em 0 #5E8C4A, 6em 6em 0 #5E8C4A, 7em 6em 0 #5E8C4A, 8em 6em 0 #5E8C4A, 9em 6em 0 #5E8C4A, 10em 6em 0 #CFE3EA, 11em 6em 0 #CFE3EA, 12em 6em 0 #5A3E2B, 1em 7em 0 #5A3E2B, 2em 7em 0 #CFE3EA, 3em 7em 0 #5E8C4A, 4em 7em 0 #5E8C4A, 5em 7em 0 #5E8C4A, 6em 7em 0 #5E8C4A, 7em 7em 0 #5E8C4A, 8em 7em 0 #5E8C4A, 9em 7em 0 #5E8C4A, 10em 7em 0 #5E8C4A, 11em 7em 0 #CFE3EA, 12em 7em 0 #5A3E2B, 1em 8em 0 #5A3E2B, 2em 8em 0 #5E8C4A, 3em 8em 0 #5E8C4A, 4em 8em 0 #5E8C4A, 5em 8em 0 #5E8C4A, 6em 8em 0 #5E8C4A, 7em 8em 0 #5E8C4A, 8em 8em 0 #5E8C4A, 9em 8em 0 #5E8C4A, 10em 8em 0 #5E8C4A, 11em 8em 0 #5E8C4A, 12em 8em 0 #5A3E2B, 1em 9em 0 #5A3E2B, 2em 9em 0 #5A3E2B, 3em 9em 0 #5A3E2B, 4em 9em 0 #5A3E2B, 5em 9em 0 #5A3E2B, 6em 9em 0 #5A3E2B, 7em 9em 0 #5A3E2B, 8em 9em 0 #5A3E2B, 9em 9em 0 #5A3E2B, 10em 9em 0 #5A3E2B, 11em 9em 0 #5A3E2B, 12em 9em 0 #5A3E2B"}, "lamp": {"w": 9, "h": 10, "sh": "5em 1em 0 #1A1A1A, 5em 2em 0 #1A1A1A, 5em 3em 0 #1A1A1A, 5em 4em 0 #1A1A1A, 5em 5em 0 #1A1A1A, 5em 6em 0 #1A1A1A, 4em 7em 0 #E8D9B8, 5em 7em 0 #E8D9B8, 6em 7em 0 #E8D9B8, 3em 8em 0 #E8D9B8, 4em 8em 0 #E8D9B8, 5em 8em 0 #E8D9B8, 6em 8em 0 #E8D9B8, 7em 8em 0 #E8D9B8, 2em 9em 0 #E8D9B8, 3em 9em 0 #E8D9B8, 4em 9em 0 #E8D9B8, 5em 9em 0 #E8D9B8, 6em 9em 0 #E8D9B8, 7em 9em 0 #E8D9B8, 8em 9em 0 #E8D9B8, 5em 10em 0 #FFD27A"}, "shelf": {"w": 14, "h": 5, "sh": "2em 1em 0 #D9534F, 4em 1em 0 #D9534F, 7em 1em 0 #F2C14E, 12em 1em 0 #6E9B4F, 2em 2em 0 #D9534F, 3em 2em 0 #D9534F, 4em 2em 0 #D9534F, 7em 2em 0 #F2C14E, 8em 2em 0 #F2C14E, 9em 2em 0 #F2C14E, 11em 2em 0 #F28C28, 12em 2em 0 #F28C28, 13em 2em 0 #F28C28, 3em 3em 0 #D9534F, 7em 3em 0 #F2C14E, 11em 3em 0 #F28C28, 12em 3em 0 #F28C28, 13em 3em 0 #F28C28, 1em 4em 0 #6B4A33, 2em 4em 0 #6B4A33, 3em 4em 0 #6B4A33, 4em 4em 0 #6B4A33, 5em 4em 0 #6B4A33, 6em 4em 0 #6B4A33, 7em 4em 0 #6B4A33, 8em 4em 0 #6B4A33, 9em 4em 0 #6B4A33, 10em 4em 0 #6B4A33, 11em 4em 0 #6B4A33, 12em 4em 0 #6B4A33, 13em 4em 0 #6B4A33, 14em 4em 0 #6B4A33, 2em 5em 0 #3B2A1E, 13em 5em 0 #3B2A1E"}, "plant": {"w": 7, "h": 10, "sh": "4em 1em 0 #6E9B4F, 2em 2em 0 #6E9B4F, 4em 2em 0 #6E9B4F, 6em 2em 0 #6E9B4F, 1em 3em 0 #6E9B4F, 2em 3em 0 #6E9B4F, 4em 3em 0 #6E9B4F, 6em 3em 0 #6E9B4F, 7em 3em 0 #6E9B4F, 2em 4em 0 #6E9B4F, 3em 4em 0 #6E9B4F, 4em 4em 0 #6E9B4F, 5em 4em 0 #6E9B4F, 6em 4em 0 #6E9B4F, 3em 5em 0 #3F6B35, 4em 5em 0 #6E9B4F, 5em 5em 0 #3F6B35, 4em 6em 0 #3F6B35, 2em 7em 0 #B5653A, 3em 7em 0 #B5653A, 4em 7em 0 #B5653A, 5em 7em 0 #B5653A, 6em 7em 0 #B5653A, 2em 8em 0 #B5653A, 3em 8em 0 #B5653A, 4em 8em 0 #B5653A, 5em 8em 0 #B5653A, 6em 8em 0 #B5653A, 3em 9em 0 #B5653A, 4em 9em 0 #B5653A, 5em 9em 0 #B5653A, 3em 10em 0 #B5653A, 4em 10em 0 #B5653A, 5em 10em 0 #B5653A"}, "sofa": {"w": 18, "h": 8, "sh": "3em 1em 0 #3E6E6A, 4em 1em 0 #3E6E6A, 5em 1em 0 #3E6E6A, 6em 1em 0 #3E6E6A, 7em 1em 0 #3E6E6A, 8em 1em 0 #3E6E6A, 9em 1em 0 #3E6E6A, 10em 1em 0 #3E6E6A, 11em 1em 0 #3E6E6A, 12em 1em 0 #3E6E6A, 13em 1em 0 #3E6E6A, 14em 1em 0 #3E6E6A, 15em 1em 0 #3E6E6A, 16em 1em 0 #3E6E6A, 2em 2em 0 #3E6E6A, 3em 2em 0 #3E6E6A, 4em 2em 0 #3E6E6A, 5em 2em 0 #3E6E6A, 6em 2em 0 #3E6E6A, 7em 2em 0 #3E6E6A, 8em 2em 0 #3E6E6A, 9em 2em 0 #3E6E6A, 10em 2em 0 #3E6E6A, 11em 2em 0 #3E6E6A, 12em 2em 0 #3E6E6A, 13em 2em 0 #3E6E6A, 14em 2em 0 #3E6E6A, 15em 2em 0 #3E6E6A, 16em 2em 0 #3E6E6A, 17em 2em 0 #3E6E6A, 1em 3em 0 #3E6E6A, 2em 3em 0 #3E6E6A, 3em 3em 0 #3E6E6A, 4em 3em 0 #3E6E6A, 5em 3em 0 #3E6E6A, 6em 3em 0 #3E6E6A, 7em 3em 0 #3E6E6A, 8em 3em 0 #3E6E6A, 9em 3em 0 #3E6E6A, 10em 3em 0 #3E6E6A, 11em 3em 0 #3E6E6A, 12em 3em 0 #3E6E6A, 13em 3em 0 #3E6E6A, 14em 3em 0 #3E6E6A, 15em 3em 0 #3E6E6A, 16em 3em 0 #3E6E6A, 17em 3em 0 #3E6E6A, 18em 3em 0 #3E6E6A, 1em 4em 0 #3E6E6A, 2em 4em 0 #3E6E6A, 3em 4em 0 #2C504D, 4em 4em 0 #2C504D, 5em 4em 0 #2C504D, 6em 4em 0 #2C504D, 7em 4em 0 #2C504D, 8em 4em 0 #2C504D, 9em 4em 0 #2C504D, 10em 4em 0 #2C504D, 11em 4em 0 #2C504D, 12em 4em 0 #2C504D, 13em 4em 0 #2C504D, 14em 4em 0 #2C504D, 15em 4em 0 #2C504D, 16em 4em 0 #2C504D, 17em 4em 0 #3E6E6A, 18em 4em 0 #3E6E6A, 1em 5em 0 #3E6E6A, 2em 5em 0 #3E6E6A, 3em 5em 0 #3E6E6A, 4em 5em 0 #3E6E6A, 5em 5em 0 #3E6E6A, 6em 5em 0 #3E6E6A, 7em 5em 0 #3E6E6A, 8em 5em 0 #3E6E6A, 9em 5em 0 #3E6E6A, 10em 5em 0 #3E6E6A, 11em 5em 0 #3E6E6A, 12em 5em 0 #3E6E6A, 13em 5em 0 #3E6E6A, 14em 5em 0 #3E6E6A, 15em 5em 0 #3E6E6A, 16em 5em 0 #3E6E6A, 17em 5em 0 #3E6E6A, 18em 5em 0 #3E6E6A, 1em 6em 0 #3E6E6A, 2em 6em 0 #3E6E6A, 3em 6em 0 #3E6E6A, 4em 6em 0 #3E6E6A, 5em 6em 0 #3E6E6A, 6em 6em 0 #3E6E6A, 7em 6em 0 #3E6E6A, 8em 6em 0 #3E6E6A, 9em 6em 0 #3E6E6A, 10em 6em 0 #3E6E6A, 11em 6em 0 #3E6E6A, 12em 6em 0 #3E6E6A, 13em 6em 0 #3E6E6A, 14em 6em 0 #3E6E6A, 15em 6em 0 #3E6E6A, 16em 6em 0 #3E6E6A, 17em 6em 0 #3E6E6A, 18em 6em 0 #3E6E6A, 1em 7em 0 #2C504D, 2em 7em 0 #2C504D, 3em 7em 0 #2C504D, 4em 7em 0 #2C504D, 5em 7em 0 #2C504D, 6em 7em 0 #2C504D, 7em 7em 0 #2C504D, 8em 7em 0 #2C504D, 9em 7em 0 #2C504D, 10em 7em 0 #2C504D, 11em 7em 0 #2C504D, 12em 7em 0 #2C504D, 13em 7em 0 #2C504D, 14em 7em 0 #2C504D, 15em 7em 0 #2C504D, 16em 7em 0 #2C504D, 17em 7em 0 #2C504D, 18em 7em 0 #2C504D, 2em 8em 0 #222222, 17em 8em 0 #222222"}, "rug": {"w": 22, "h": 3, "sh": "1em 1em 0 #C9B48A, 2em 1em 0 #C9B48A, 3em 1em 0 #C9B48A, 4em 1em 0 #C9B48A, 5em 1em 0 #C9B48A, 6em 1em 0 #C9B48A, 7em 1em 0 #C9B48A, 8em 1em 0 #C9B48A, 9em 1em 0 #C9B48A, 10em 1em 0 #C9B48A, 11em 1em 0 #C9B48A, 12em 1em 0 #C9B48A, 13em 1em 0 #C9B48A, 14em 1em 0 #C9B48A, 15em 1em 0 #C9B48A, 16em 1em 0 #C9B48A, 17em 1em 0 #C9B48A, 18em 1em 0 #C9B48A, 19em 1em 0 #C9B48A, 20em 1em 0 #C9B48A, 21em 1em 0 #C9B48A, 22em 1em 0 #C9B48A, 1em 2em 0 #C9B48A, 2em 2em 0 #9E8A62, 3em 2em 0 #C9B48A, 4em 2em 0 #9E8A62, 5em 2em 0 #C9B48A, 6em 2em 0 #9E8A62, 7em 2em 0 #C9B48A, 8em 2em 0 #9E8A62, 9em 2em 0 #C9B48A, 10em 2em 0 #9E8A62, 11em 2em 0 #C9B48A, 12em 2em 0 #9E8A62, 13em 2em 0 #C9B48A, 14em 2em 0 #9E8A62, 15em 2em 0 #C9B48A, 16em 2em 0 #9E8A62, 17em 2em 0 #C9B48A, 18em 2em 0 #9E8A62, 19em 2em 0 #C9B48A, 20em 2em 0 #9E8A62, 21em 2em 0 #C9B48A, 22em 2em 0 #9E8A62, 1em 3em 0 #C9B48A, 2em 3em 0 #C9B48A, 3em 3em 0 #C9B48A, 4em 3em 0 #C9B48A, 5em 3em 0 #C9B48A, 6em 3em 0 #C9B48A, 7em 3em 0 #C9B48A, 8em 3em 0 #C9B48A, 9em 3em 0 #C9B48A, 10em 3em 0 #C9B48A, 11em 3em 0 #C9B48A, 12em 3em 0 #C9B48A, 13em 3em 0 #C9B48A, 14em 3em 0 #C9B48A, 15em 3em 0 #C9B48A, 16em 3em 0 #C9B48A, 17em 3em 0 #C9B48A, 18em 3em 0 #C9B48A, 19em 3em 0 #C9B48A, 20em 3em 0 #C9B48A, 21em 3em 0 #C9B48A, 22em 3em 0 #C9B48A"}, "cat": {"w": 8, "h": 7, "sh": "2em 1em 0 #222222, 6em 1em 0 #E08A3C, 1em 2em 0 #222222, 2em 2em 0 #222222, 3em 2em 0 #F4F1EA, 4em 2em 0 #F4F1EA, 5em 2em 0 #F4F1EA, 6em 2em 0 #E08A3C, 7em 2em 0 #E08A3C, 1em 3em 0 #F4F1EA, 2em 3em 0 #222222, 3em 3em 0 #F4F1EA, 4em 3em 0 #F4F1EA, 5em 3em 0 #F4F1EA, 6em 3em 0 #222222, 7em 3em 0 #F4F1EA, 1em 4em 0 #F4F1EA, 2em 4em 0 #F4F1EA, 3em 4em 0 #F4F1EA, 4em 4em 0 #E79AA0, 5em 4em 0 #F4F1EA, 6em 4em 0 #F4F1EA, 7em 4em 0 #F4F1EA, 2em 5em 0 #F4F1EA, 3em 5em 0 #F4F1EA, 4em 5em 0 #F4F1EA, 5em 5em 0 #F4F1EA, 6em 5em 0 #F4F1EA, 2em 6em 0 #F4F1EA, 3em 6em 0 #F4F1EA, 4em 6em 0 #E08A3C, 5em 6em 0 #F4F1EA, 6em 6em 0 #F4F1EA, 7em 6em 0 #E08A3C, 2em 7em 0 #F4F1EA, 3em 7em 0 #F4F1EA, 5em 7em 0 #F4F1EA, 6em 7em 0 #F4F1EA, 8em 7em 0 #E08A3C"}, "nozzle": {"w": 5, "h": 4, "sh": "1em 1em 0 #9A958F, 2em 1em 0 #9A958F, 3em 1em 0 #9A958F, 4em 1em 0 #9A958F, 5em 1em 0 #9A958F, 1em 2em 0 #9A958F, 2em 2em 0 #9A958F, 3em 2em 0 #9A958F, 4em 2em 0 #9A958F, 5em 2em 0 #9A958F, 2em 3em 0 #9A958F, 3em 3em 0 #9A958F, 4em 3em 0 #9A958F, 3em 4em 0 #9A958F"}, "ringtop": {"w": 5, "h": 4, "sh": "2em 1em 0 #C9C5BF, 3em 1em 0 #C9C5BF, 4em 1em 0 #C9C5BF, 1em 2em 0 #C9C5BF, 5em 2em 0 #C9C5BF, 1em 3em 0 #C9C5BF, 5em 3em 0 #C9C5BF, 2em 4em 0 #C9C5BF, 4em 4em 0 #C9C5BF"}, "turtle": {"w": 10, "h": 5, "sh": "4em 1em 0 #F2C230, 5em 1em 0 #F2C230, 6em 1em 0 #F2C230, 3em 2em 0 #F2C230, 4em 2em 0 #B8860B, 5em 2em 0 #F2C230, 6em 2em 0 #B8860B, 7em 2em 0 #F2C230, 9em 2em 0 #F7DC7A, 10em 2em 0 #F7DC7A, 2em 3em 0 #F2C230, 3em 3em 0 #F2C230, 4em 3em 0 #F2C230, 5em 3em 0 #F2C230, 6em 3em 0 #F2C230, 7em 3em 0 #F2C230, 8em 3em 0 #F2C230, 9em 3em 0 #F7DC7A, 10em 3em 0 #3A2A00, 1em 4em 0 #A87A0A, 2em 4em 0 #A87A0A, 3em 4em 0 #A87A0A, 4em 4em 0 #A87A0A, 5em 4em 0 #A87A0A, 6em 4em 0 #A87A0A, 7em 4em 0 #A87A0A, 8em 4em 0 #A87A0A, 2em 5em 0 #F7DC7A, 4em 5em 0 #F7DC7A, 7em 5em 0 #F7DC7A, 9em 5em 0 #F7DC7A"}};
+    this.shapes = {"heart": [".xxx....xxx.", "xxxxx..xxxxx", "xxxxxxxxxxxx", "xxxxxxxxxxxx", "xxxxxxxxxxxy", ".xxxxxxxxxy.", "..xxxxxxxy..", "...xxxxxy...", "....xxxy....", ".....xy....."], "star": [".....x.....", ".....x.....", "....xxx....", "....xxx....", "xxxxxxxxxxx", ".xxxxxxxxx.", "..xxxxxxx..", "..xxxxxxx..", ".xxxx.xxxy.", ".xxy...xxy.", "xy.......xy"], "tang": [".....g.....", "....gg.....", "..xxxxxxx..", ".xxxxxxxxx.", "xxxxxxxxxxx", "xxxxxxxxxxx", "xxxxxxxxxxy", "xxxxxxxxxxy", ".xxxxxxxxy.", "..xxxxxyy.."], "donut": ["...xxxxx...", ".xxxxxxxxx.", ".xxxxxxxxx.", "xxxx...xxxx", "xxx.....xxx", "xxx.....xxx", "xxx.....xxy", "xxxx...xxxy", ".xxxxxxxxy.", ".xxxxxxxyy.", "...xxxyy..."]};
+    this.dir = 0;
+    this.state.sheetY = 0;
+    this.state.sheetDrag = false;
+    this.state.motionAsk = typeof window !== 'undefined' && typeof window.DeviceOrientationEvent !== 'undefined' && typeof window.DeviceOrientationEvent.requestPermission === 'function';
+    this.fullText = 'is coming';
+    this.reduce = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // 단어별 픽셀 아이콘: PLAY=게임패드, SPACE=실내 공간, MAKE=3D 프린터
+    this.pix = {"gamepad": {"cols": 20, "rows": 11, "cells": "3,0;4,0;5,0;6,0;7,0;12,0;13,0;14,0;15,0;16,0;2,1;3,1;4,1;5,1;6,1;7,1;8,1;9,1;10,1;11,1;12,1;13,1;14,1;15,1;16,1;17,1;1,2;2,2;3,2;4,2;5,2;6,2;7,2;8,2;9,2;10,2;11,2;12,2;13,2;14,2;15,2;16,2;17,2;18,2;0,3;1,3;2,3;3,3;5,3;6,3;7,3;8,3;9,3;10,3;11,3;12,3;13,3;15,3;16,3;17,3;18,3;19,3;0,4;1,4;2,4;6,4;7,4;8,4;9,4;10,4;11,4;12,4;14,4;16,4;17,4;18,4;19,4;0,5;1,5;2,5;3,5;5,5;6,5;7,5;8,5;9,5;10,5;11,5;12,5;13,5;15,5;16,5;17,5;18,5;19,5;0,6;1,6;2,6;3,6;4,6;5,6;6,6;7,6;8,6;9,6;10,6;11,6;12,6;13,6;14,6;15,6;16,6;17,6;18,6;19,6;0,7;1,7;2,7;3,7;4,7;5,7;6,7;13,7;14,7;15,7;16,7;17,7;18,7;19,7;0,8;1,8;2,8;3,8;4,8;5,8;14,8;15,8;16,8;17,8;18,8;19,8;1,9;2,9;3,9;4,9;15,9;16,9;17,9;18,9;2,10;3,10;16,10;17,10"}, "room": {"cols": 20, "rows": 15, "cells": "14,0;2,1;3,1;4,1;5,1;6,1;7,1;8,1;14,1;2,2;5,2;8,2;14,2;2,3;5,3;8,3;13,3;14,3;15,3;2,4;3,4;4,4;5,4;6,4;7,4;8,4;12,4;13,4;14,4;15,4;16,4;2,5;5,5;8,5;2,6;5,6;8,6;2,7;3,7;4,7;5,7;6,7;7,7;8,7;16,7;15,8;16,8;17,8;2,9;3,9;4,9;5,9;6,9;7,9;8,9;9,9;10,9;14,9;16,9;18,9;1,10;2,10;3,10;4,10;5,10;6,10;7,10;8,10;9,10;10,10;11,10;15,10;16,10;17,10;1,11;11,11;14,11;15,11;16,11;17,11;18,11;1,12;2,12;3,12;4,12;5,12;6,12;7,12;8,12;9,12;10,12;11,12;15,12;16,12;17,12;2,13;10,13;15,13;16,13;17,13;0,14;1,14;2,14;3,14;4,14;5,14;6,14;7,14;8,14;9,14;10,14;11,14;12,14;13,14;14,14;15,14;16,14;17,14;18,14;19,14"}, "printer": {"cols": 20, "rows": 16, "cells": "0,0;1,0;2,0;3,0;4,0;5,0;6,0;7,0;8,0;9,0;10,0;11,0;12,0;13,0;14,0;15,0;16,0;17,0;18,0;19,0;0,1;19,1;0,2;8,2;9,2;10,2;11,2;19,2;0,3;1,3;2,3;3,3;4,3;5,3;6,3;7,3;8,3;9,3;10,3;11,3;12,3;13,3;14,3;15,3;16,3;17,3;18,3;19,3;0,4;8,4;9,4;10,4;11,4;19,4;0,5;9,5;10,5;19,5;0,6;19,6;0,7;7,7;8,7;10,7;11,7;19,7;0,8;6,8;7,8;8,8;9,8;10,8;11,8;12,8;19,8;0,9;6,9;7,9;8,9;9,9;10,9;11,9;12,9;19,9;0,10;7,10;8,10;9,10;10,10;11,10;19,10;0,11;8,11;9,11;10,11;19,11;0,12;9,12;19,12;0,13;2,13;3,13;4,13;5,13;6,13;7,13;8,13;9,13;10,13;11,13;12,13;13,13;14,13;15,13;16,13;17,13;19,13;0,14;2,14;17,14;19,14;0,15;1,15;2,15;3,15;4,15;5,15;6,15;7,15;8,15;9,15;10,15;11,15;12,15;13,15;14,15;15,15;16,15;17,15;18,15;19,15"}};
+    this.secDefs = [
+      { word: 'PLAY', key: 'gamepad', alt: '게임패드 픽셀 아이콘' },
+      { word: 'SPACE', key: 'room', alt: '창문, 조명, 소파, 화분이 있는 실내 공간 픽셀 아이콘' },
+      { word: 'MAKE', key: 'printer', alt: '하트 굿즈를 출력하는 3D 프린터 픽셀 아이콘' }
+    ];
+    this.cellCache = {};
+    this.secDefs[0].modal = 'play'; this.secDefs[0].cta = '눌러서 게임하기';
+    this.secDefs[1].modal = 'space'; this.secDefs[1].cta = '눌러서 공간 꾸미기';
+    this.secDefs[2].modal = 'make'; this.secDefs[2].cta = '눌러서 굿즈 만들기';
+    this.roomDefs = [
+      { key: 'sofa', label: '소파', sprite: 'sofa', x: 17, y: 26 },
+      { key: 'lamp', label: '조명', sprite: 'lamp', x: 28, y: 0 },
+      { key: 'frame', label: '한라산 액자', sprite: 'frame', x: 6, y: 7 },
+      { key: 'plant', label: '화분', sprite: 'plant', x: 3, y: 24 },
+      { key: 'rug', label: '러그', sprite: 'rug', x: 15, y: 35 },
+      { key: 'shelf', label: '굿즈 선반', sprite: 'shelf', x: 45, y: 13 },
+      { key: 'cat', label: '고양이', sprite: 'cat', x: 47, y: 27 }
+    ];
+    this.defaultPos = () => { const p = {}; this.roomDefs.forEach((d) => { p[d.key] = { x: d.x, y: d.y }; }); return p; };
+    this.defaultOrder = () => ['rug', 'frame', 'shelf', 'lamp', 'plant', 'sofa', 'cat'];
+    this.walls = [
+      { key: 'white', label: '화이트', color: '#EDEAE3' },
+      { key: 'stone', label: '현무암', color: '#4A4846' },
+      { key: 'olive', label: '올리브', color: '#7C8461' },
+      { key: 'sea', label: '바다', color: '#4F7C8A' }
+    ];
+    this.shapeDefs = [
+      { key: 'heart', label: '하트' }, { key: 'star', label: '별' }, { key: 'tang', label: '귤' }, { key: 'donut', label: '도넛' }
+    ];
+    this.colorDefs = [
+      { key: 'tang', label: '귤빛', main: '#F28C28', shade: '#C96A12' },
+      { key: 'sea', label: '바다', main: '#3D8FB0', shade: '#2A6A85' },
+      { key: 'stone', label: '현무암', main: '#8A8682', shade: '#5E5B58' },
+      { key: 'white', label: '화이트', main: '#F2F0EA', shade: '#C7C3BB' }
+    ];
+  }
+  componentDidMount() {
+    if (this.reduce) { this.setState({ typedCount: this.fullText.length }); }
+    else {
+      const step = () => {
+        const n = this.state.typedCount + 1;
+        this.setState({ typedCount: n });
+        if (n < this.fullText.length) {
+          const ch = this.fullText.charAt(n - 1);
+          this.typeTimer = setTimeout(step, ch === ' ' ? 150 : 85);
+        }
+      };
+      this.typeTimer = setTimeout(step, 1800);
+    }
+    this.onTilt = (e) => {
+      if (e.beta == null || e.gamma == null || this.pointerActive) return;
+      const b = Math.max(-30, Math.min(30, e.beta - 45));
+      const g = Math.max(-30, Math.min(30, e.gamma));
+      this.setState({ rx: +(-b * 0.5).toFixed(1), ry: +(g * 0.6).toFixed(1) });
+    };
+    if (typeof window !== 'undefined' && 'ondeviceorientation' in window) {
+      window.addEventListener('deviceorientation', this.onTilt);
+    }
+  }
+  componentDidUpdate(prevProps, prevState) {
+    if (this.state.modal && !prevState.modal && this.modalEl) this.modalEl.focus();
+  }
+  haptic(p) { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
+  openModal(kind) {
+    this.haptic(8);
+    this.setState({ modal: kind, sheetY: 0, sheetDrag: false });
+  }
+  closeModal() {
+    this.stopGame();
+    clearInterval(this.printTimer);
+    const mk = this.state.mk;
+    this.setState({ modal: null, mk: mk.status === 'printing' ? Object.assign({}, mk, { status: 'idle', p: 0 }) : mk,
+      g: Object.assign({}, this.state.g, { status: this.state.g.status === 'playing' ? 'ready' : this.state.g.status, items: [] }) });
+  }
+  // ----- PLAY: 황금거북이 받기 -----
+  startGame() {
+    this.stopGame();
+    this.spawnT = 10;
+    this.nid = 1;
+    this.setState({ g: { status: 'playing', x: 30, items: [], score: 0, lives: 3, best: this.state.g.best } });
+    this.gameTimer = setInterval(() => this.tick(), 40);
+  }
+  stopGame() { clearInterval(this.gameTimer); this.gameTimer = null; this.dir = 0; }
+  tick() {
+    const g = this.state.g;
+    if (g.status !== 'playing') return;
+    let x = Math.max(7, Math.min(53, g.x + this.dir * 1.8));
+    let score = g.score, lives = g.lives;
+    const items = [];
+    for (const it of g.items) {
+      const y = it.y + it.vy;
+      const d = this.spr[it.type];
+      const cx = it.x + d.w / 2;
+      if (y + d.h >= 73 && y <= 77 && Math.abs(cx - x) < 7 + d.w / 2) {
+        if (it.type === 'turtle') { score += 1; this.haptic(10); } else { lives -= 1; this.haptic([25, 40, 25]); }
+        continue;
+      }
+      if (y < 82) items.push({ id: it.id, x: it.x, y: y, vy: it.vy, type: it.type });
+    }
+    this.spawnT -= 1;
+    if (this.spawnT <= 0) {
+      const stoneChance = Math.min(0.45, 0.25 + score * 0.008);
+      items.push({ id: this.nid++, x: 2 + Math.random() * 46, y: -8, vy: 0.55 + Math.min(score * 0.03, 1.2) + Math.random() * 0.25, type: Math.random() < stoneChance ? 'stone' : 'turtle' });
+      this.spawnT = Math.max(7, 20 - score * 0.35) + Math.random() * 6;
+    }
+    if (lives <= 0) {
+      this.stopGame();
+      this.setState({ g: { status: 'over', x: x, items: [], score: score, lives: 0, best: Math.max(g.best, score) } });
+      return;
+    }
+    this.setState({ g: { status: 'playing', x: x, items: items, score: score, lives: lives, best: g.best } });
+  }
+  // ----- MAKE: 3D 프린터 -----
+  runPrint() {
+    if (this.state.mk.status === 'printing') return;
+    clearInterval(this.printTimer);
+    this.setState({ mk: Object.assign({}, this.state.mk, { status: 'printing', p: 0 }) });
+    this.printTimer = setInterval(() => {
+      const mk = this.state.mk;
+      const p = Math.min(100, mk.p + 1.6);
+      if (p >= 100) { clearInterval(this.printTimer); this.haptic([15, 30, 15]); this.setState({ mk: Object.assign({}, mk, { p: 100, status: 'done' }) }); }
+      else this.setState({ mk: Object.assign({}, mk, { p: p }) });
+    }, 40);
+  }
+  shapeShadow(key, colorKey) {
+    const rows = this.shapes[key];
+    const col = this.colorDefs.find((c) => c.key === colorKey) || this.colorDefs[0];
+    const out = [];
+    rows.forEach((row, r) => {
+      for (let c = 0; c < row.length; c++) {
+        const ch = row.charAt(c);
+        if (ch === '.') continue;
+        const color = ch === 'x' ? col.main : ch === 'y' ? col.shade : '#6E9B4F';
+        out.push((c + 1) + 'em ' + (r + 1) + 'em 0 ' + color);
+      }
+    });
+    return { w: Math.max.apply(null, rows.map((x) => x.length)), h: rows.length, sh: out.join(', ') };
+  }
+  sprStyle(key, x, y) {
+    return 'left: ' + x.toFixed(2) + 'em; top: ' + y.toFixed(2) + 'em; box-shadow: ' + this.spr[key].sh;
+  }
+  componentWillUnmount() {
+    this.stopGame();
+    clearInterval(this.printTimer);
+    clearTimeout(this.typeTimer);
+    clearTimeout(this.secTimer);
+    if (this.onTilt) window.removeEventListener('deviceorientation', this.onTilt);
+  }
+  typeSection(idx) {
+    clearTimeout(this.secTimer);
+    if (idx < 1) return;
+    const word = this.secDefs[idx - 1].word;
+    if (this.reduce) { this.setState({ secCount: word.length }); return; }
+    this.setState({ secCount: 0 });
+    const step = () => {
+      const n = this.state.secCount + 1;
+      this.setState({ secCount: n });
+      if (n < word.length) this.secTimer = setTimeout(step, 110);
+    };
+    this.secTimer = setTimeout(step, 250);
+  }
+  cells(key) {
+    if (this.cellCache[key]) return this.cellCache[key];
+    const d = this.pix[key];
+    const list = d.cells.split(';').map((s, i) => {
+      const xy = s.split(',');
+      const c = +xy[0], r = +xy[1];
+      const delay = ((c * 37 + r * 61 + i * 13) % 97) / 97 * 0.7;
+      return { style: 'left: calc(var(--cell) * ' + c + '); top: calc(var(--cell) * ' + r + '); transition-delay: ' + delay.toFixed(2) + 's' };
+    });
+    this.cellCache[key] = list;
+    return list;
+  }
+  slices(depth, night) {
+    const n = Math.max(1, Math.round(depth / 2));
+    const out = [];
+    for (let i = n; i >= 0; i--) {
+      const z = -(depth * i) / n;
+      let f;
+      if (i === 0) f = night ? 'invert(1) brightness(1.2)' : 'none';
+      else {
+        const t = i / n;
+        f = night ? 'invert(' + (0.55 - t * 0.3).toFixed(2) + ')' : 'invert(' + (0.14 + t * 0.16).toFixed(2) + ')';
+      }
+      out.push({ style: 'transform: translateZ(' + z.toFixed(1) + 'px); filter: ' + f });
+    }
+    return out;
+  }
+  roomItemVals() {
+    const room = this.state.room;
+    const pos = room.pos || this.defaultPos();
+    const order = room.order || this.defaultOrder();
+    const defs = {};
+    this.roomDefs.forEach((d) => { defs[d.key] = d; });
+    const setPos = (key, x, y) => {
+      const r = this.state.room;
+      const sp = this.spr[defs[key].sprite];
+      const np = Object.assign({}, r.pos || this.defaultPos());
+      np[key] = { x: Math.max(0, Math.min(64 - sp.w, x)), y: Math.max(0, Math.min(44 - sp.h, y)) };
+      this.setState({ room: Object.assign({}, r, { pos: np }) });
+    };
+    const toFront = (key) => {
+      const r = this.state.room;
+      const o = (r.order || this.defaultOrder()).filter((k) => k !== key);
+      o.push(key);
+      return o;
+    };
+    return order.filter((k) => room.on[k]).map((k) => {
+      const d = defs[k];
+      const sp = this.spr[d.sprite];
+      const p = pos[k];
+      return {
+        cls: room.drag && room.drag.key === k ? 'item dragging' : 'item',
+        aria: d.label + ' 옮기기',
+        boxStyle: 'left: ' + p.x.toFixed(2) + 'em; top: ' + p.y.toFixed(2) + 'em; width: ' + sp.w + 'em; height: ' + sp.h + 'em',
+        sprStyle: 'left: 0; top: 0; box-shadow: ' + sp.sh,
+        down: (e) => {
+          const field = e.currentTarget.parentElement.getBoundingClientRect();
+          const unit = field.width / 64;
+          try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) {}
+          const cur = (this.state.room.pos || this.defaultPos())[k];
+          this.setState({ room: Object.assign({}, this.state.room, { order: toFront(k), drag: { key: k, sx: e.clientX, sy: e.clientY, ox: cur.x, oy: cur.y, unit: unit } }) });
+          e.preventDefault();
+        },
+        move: (e) => {
+          const dr = this.state.room.drag;
+          if (!dr || dr.key !== k) return;
+          setPos(k, dr.ox + (e.clientX - dr.sx) / dr.unit, dr.oy + (e.clientY - dr.sy) / dr.unit);
+        },
+        up: () => { if (this.state.room.drag) this.setState({ room: Object.assign({}, this.state.room, { drag: null }) }); },
+        key: (e) => {
+          const step = e.shiftKey ? 4 : 1;
+          const cur = (this.state.room.pos || this.defaultPos())[k];
+          const mv = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[e.key];
+          if (!mv) return;
+          e.preventDefault();
+          e.stopPropagation();
+          setPos(k, cur.x + mv[0], cur.y + mv[1]);
+        }
+      };
+    });
+  }
+  gameVals() {
+    const g = this.state.g;
+    return {
+      score: g.score, lives: g.lives, best: g.best,
+      items: g.items.map((it) => ({ style: this.sprStyle(it.type, it.x, it.y) + (it.type === 'turtle' ? '; filter: drop-shadow(0 0 0.8em rgba(255, 200, 60, 0.75))' : '') })),
+      basketStyle: this.sprStyle('basket', g.x - 7, 74),
+      showCover: g.status !== 'playing',
+      coverTitle: g.status === 'over' ? 'Game over' : 'Catch!',
+      coverText: g.status === 'over' ? ('황금거북이 ' + g.score + '마리를 받았어요.') : '하늘에서 내려오는 작은 황금거북이를 바구니로 받아보세요. 현무암은 피하세요!',
+      startLabel: g.status === 'over' ? '다시 하기' : '시작하기'
+    };
+  }
+  makeVals() {
+    const mk = this.state.mk;
+    const sh = this.shapeShadow(mk.shape, mk.color);
+    const busy = mk.status === 'printing';
+    const shown = mk.status === 'idle' ? 0 : mk.p;
+    const shapeLabel = (this.shapeDefs.find((d) => d.key === mk.shape) || {}).label;
+    return {
+      alt: '3D 프린터에서 ' + shapeLabel + ' 굿즈를 출력하는 화면',
+      busy: busy,
+      printing: busy,
+      done: mk.status === 'done',
+      boxStyle: 'width: ' + sh.w + 'em; height: ' + sh.h + 'em',
+      clipStyle: mk.status === 'idle' ? 'position: absolute; inset: 0; opacity: 0.22' : 'position: absolute; inset: 0; clip-path: inset(' + (100 - shown).toFixed(1) + '% 0 0 0)',
+      shapeStyle: 'left: 0; top: 0; box-shadow: ' + sh.sh,
+      lineStyle: 'top: calc(' + (100 - shown).toFixed(1) + '% - 1px)',
+      ringStyle: 'left: ' + (sh.w / 2 - 2.5).toFixed(1) + 'em; top: -4em; box-shadow: ' + this.spr.ringtop.sh,
+      nozzleStyle: 'font-size: 8px; left: ' + (110 - 20) + 'px; top: 18px; box-shadow: ' + this.spr.nozzle.sh,
+      status: busy ? ('출력 중 ' + Math.round(mk.p) + '%') : mk.status === 'done' ? '완성! 나만의 ' + shapeLabel + ' 키링이 출력됐어요.' : '모양과 필라멘트 색을 고르고 출력해 보세요.',
+      runLabel: busy ? '출력 중' : mk.status === 'done' ? '다시 출력하기' : '출력하기',
+      run: () => this.runPrint(),
+      shapes: this.shapeDefs.map((d) => ({ label: d.label, pressed: mk.shape === d.key ? 'true' : 'false',
+        pick: () => this.setState({ mk: { shape: d.key, color: mk.color, p: 0, status: 'idle' } }) })),
+      colors: this.colorDefs.map((c) => ({ label: c.label + ' 필라멘트', style: 'background-color: ' + c.main, pressed: mk.color === c.key ? 'true' : 'false',
+        pick: () => this.setState({ mk: { shape: mk.shape, color: c.key, p: mk.status === 'done' ? 100 : 0, status: mk.status } }) }))
+    };
+  }
+  renderVals() {
+    const night = this.props.night ?? true;
+    const depth = this.props.depth ?? 28;
+    const active = this.state.active;
+    const sections = this.secDefs.map((s, i) => {
+      const idx = i + 1;
+      const on = active === idx;
+      const d = this.pix[s.key];
+      return {
+        word: s.word,
+        alt: s.alt,
+        typed: on ? s.word.slice(0, this.state.secCount) : '',
+        pixClass: on ? 'pixels lit' : 'pixels',
+        boxStyle: 'width: calc(var(--cell) * ' + d.cols + '); height: calc(var(--cell) * ' + d.rows + ')',
+        cells: this.cells(s.key),
+        cta: s.cta,
+        open: () => this.openModal(s.modal)
+      };
+    });
+    return {
+      rootClass: (night ? 'page night' : 'page') + ' scroller' + (this.state.modal ? ' locked' : ''),
+      modalOpen: !!this.state.modal,
+      setScrollerRef: (el) => { this.scrollerEl = el; },
+      dots: ['처음', 'PLAY', 'SPACE', 'MAKE'].map((name, i) => ({ label: name + ' 페이지로 이동', current: this.state.active === i ? 'true' : 'false',
+        go: () => { const el = this.scrollerEl; if (el) el.scrollTo({ top: i * el.clientHeight, behavior: this.reduce ? 'auto' : 'smooth' }); } })),
+      motionAsk: this.state.motionAsk,
+      askMotion: () => {
+        const D = window.DeviceOrientationEvent;
+        if (!D || typeof D.requestPermission !== 'function') return;
+        D.requestPermission().then((res) => { this.setState({ motionAsk: false }); }).catch(() => this.setState({ motionAsk: false }));
+      },
+      sheetClass: 'panel' + (this.state.sheetDrag ? ' dragging' : ''),
+      sheetStyle: this.state.sheetY > 0 ? 'transform: translateY(' + this.state.sheetY.toFixed(0) + 'px)' : '',
+      stopProp: (e) => e.stopPropagation(),
+      sheetDown: (e) => {
+        if (e.pointerType === 'mouse') return;
+        try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) {}
+        this.sheetStartY = e.clientY;
+        this.setState({ sheetDrag: true, sheetY: 0 });
+      },
+      sheetMove: (e) => {
+        if (!this.state.sheetDrag) return;
+        this.setState({ sheetY: Math.max(0, e.clientY - this.sheetStartY) });
+      },
+      sheetUp: () => {
+        if (!this.state.sheetDrag) return;
+        if (this.state.sheetY > 110) { this.closeModal(); this.setState({ sheetDrag: false, sheetY: 0 }); }
+        else this.setState({ sheetDrag: false, sheetY: 0 });
+      },
+      isPlay: this.state.modal === 'play',
+      isSpace: this.state.modal === 'space',
+      isMake: this.state.modal === 'make',
+      modalTitle: this.state.modal === 'play' ? '황금거북이 받기' : this.state.modal === 'space' ? '나의 작은 공간' : '나만의 굿즈 출력',
+      setModalRef: (el) => { this.modalEl = el; },
+      closeModal: () => this.closeModal(),
+      onKey: (e) => {
+        if (e.key === 'Escape') { this.closeModal(); return; }
+        if (this.state.modal !== 'play') return;
+        if (e.key === 'ArrowLeft') { this.dir = -1; e.preventDefault(); }
+        if (e.key === 'ArrowRight') { this.dir = 1; e.preventDefault(); }
+      },
+      onKeyUp: (e) => { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') this.dir = 0; },
+      g: this.gameVals(),
+      startGame: () => this.startGame(),
+      gameMove: (e) => {
+        if (this.state.g.status !== 'playing') return;
+        const r = e.currentTarget.getBoundingClientRect();
+        const x = Math.max(7, Math.min(53, (e.clientX - r.left) / r.width * 60));
+        this.setState({ g: Object.assign({}, this.state.g, { x: x }) });
+      },
+      padLeft: () => { this.dir = -1; },
+      padRight: () => { this.dir = 1; },
+      padStop: () => { this.dir = 0; },
+      wallStyle: 'background-color: ' + (this.walls.find((w) => w.key === this.state.room.wall) || this.walls[0]).color,
+      glowOn: this.state.room.on.lamp && this.state.room.light,
+      dimStyle: this.state.room.light ? 'opacity: 0' : 'opacity: 1',
+      roomItems: this.roomItemVals(),
+      glowStyle: (() => { const p = (this.state.room.pos || this.defaultPos()).lamp; return 'left: ' + (p.x + 4.5 - 18).toFixed(1) + 'em; top: ' + (p.y + 9 - 18).toFixed(1) + 'em'; })(),
+      resetRoom: () => this.setState({ room: Object.assign({}, this.state.room, { pos: null, order: null, drag: null }) }),
+      roomToggles: this.roomDefs.map((d) => ({ label: d.label, pressed: this.state.room.on[d.key] ? 'true' : 'false',
+        toggle: () => { const room = this.state.room; const on = Object.assign({}, room.on); on[d.key] = !on[d.key]; this.setState({ room: Object.assign({}, room, { on: on }) }); } })),
+      wallSwatches: this.walls.map((w) => ({ label: w.label + ' 벽', style: 'background-color: ' + w.color, pressed: this.state.room.wall === w.key ? 'true' : 'false',
+        pick: () => this.setState({ room: Object.assign({}, this.state.room, { wall: w.key }) }) })),
+      lightLabel: this.state.room.light ? '불 끄기' : '불 켜기',
+      lightChecked: this.state.room.light ? 'true' : 'false',
+      toggleLight: () => this.haptic(8) || this.setState({ room: Object.assign({}, this.state.room, { light: !this.state.room.light }) }),
+      mk: this.makeVals(),
+      ringSlices: this.slices(depth, night),
+      frameSlices: this.slices(depth, night),
+      arrowSlices: this.slices(depth, night),
+      tiltStyle: 'transform: rotateX(' + this.state.rx + 'deg) rotateY(' + this.state.ry + 'deg)',
+      typed: this.fullText.slice(0, this.state.typedCount),
+      sections: sections,
+      hintStyle: this.state.scrolled ? 'opacity: 0' : 'opacity: 1',
+      onScroll: (e) => {
+        const el = e.currentTarget;
+        const h = el.clientHeight || 1;
+        const idx = Math.max(0, Math.min(3, Math.round(el.scrollTop / h)));
+        const scrolled = el.scrollTop > 20;
+        if (scrolled !== this.state.scrolled) this.setState({ scrolled: scrolled });
+        if (idx !== this.state.active) {
+          this.setState({ active: idx });
+          this.typeSection(idx);
+        }
+      },
+      onMove: (e) => {
+        if (e.pointerType === 'touch') return;
+        this.pointerActive = true;
+        const r = e.currentTarget.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width - 0.5;
+        const y = (e.clientY - r.top) / r.height - 0.5;
+        this.setState({ ry: +(x * 36).toFixed(1), rx: +(-y * 28).toFixed(1) });
+      },
+      onLeave: () => { this.pointerActive = false; this.setState({ rx: 0, ry: 0 }); }
+    };
+  }
+  render() {
+    const v = this.renderVals();
+    return html`<div class=${v.rootClass} ref=${v.setScrollerRef} onScroll=${v.onScroll} style="font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'IBM Plex Sans KR', sans-serif">
+<nav class="dots" aria-label="페이지 이동">
+${(v.dots).map((d) => html`
+<button class="dot" aria-label=${d.label} aria-current=${d.current} onClick=${d.go}><span></span></button>
+`)}
+</nav>
+<div class="aura" aria-hidden="true"></div>
+<header class="page-head" style="display: flex; justify-content: space-between; align-items: center; padding: 28px clamp(20px, 4vw, 48px); font-family: Silkscreen, 'Courier New', monospace; font-size: 15px; letter-spacing: 0.04em">
+<span>Mendlelab</span>
+<span>Jeju, 2026</span>
+</header>
+<section class="sec hero" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 56px; padding: 88px clamp(20px, 4vw, 48px) 96px; text-align: center">
+<div class="stage" onPointerMove=${v.onMove} onPointerLeave=${v.onLeave} role="img" aria-label="MENDLELAB 로고">
+<div class="floor" aria-hidden="true"></div>
+<div class="sway">
+<div class="tilt" style=${v.tiltStyle}>
+<div class="part part-ring">
+${(v.ringSlices).map((s) => html`
+<img class="slice" src="assets/logo_ring.png" alt="" style=${s.style} />
+`)}
+</div>
+<div class="part part-frame">
+${(v.frameSlices).map((s) => html`
+<img class="slice" src="assets/logo_frame.png" alt="" style=${s.style} />
+`)}
+</div>
+<div class="part part-arrow">
+${(v.arrowSlices).map((s) => html`
+<img class="slice" src="assets/logo_arrow.png" alt="" style=${s.style} />
+`)}
+</div>
+</div>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 20px">
+<h1 style="margin: 0; font-family: Silkscreen, 'Courier New', monospace; font-weight: 400; font-size: clamp(22px, 3.4vw, 34px); line-height: 1.2; letter-spacing: 0.02em" aria-label="is coming"><span style="position: relative; display: inline-block"><span aria-hidden="true" style="visibility: hidden">is coming</span><span aria-hidden="true" style="position: absolute; left: 0; top: 0; white-space: nowrap">${v.typed}<span class="caret"></span></span></span></h1>
+<div class="reveal-late">
+<a class="ig" href="https://www.instagram.com/mendlelab/" aria-label="인스타그램 @mendlelab에서 소식 받기" style="gap: 8px; font-size: 16px; font-weight: 500; text-decoration: none"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4.2"></circle><circle cx="17.4" cy="6.6" r="0.6" style="fill: currentColor"></circle></svg><span>@mendlelab</span></a>
+${v.motionAsk ? html`
+<div style="margin-top: 10px"><button class="motion-btn" onClick=${v.askMotion}><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round"><rect x="7" y="2" width="10" height="20" rx="2.5"></rect><path d="M3 9 C2 11 2 13 3 15 M21 9 C22 11 22 13 21 15"></path></svg><span>기울여서 로고 움직이기</span></button></div>
+` : null}
+</div>
+</div>
+<div class="hint-wrap" style="position: absolute; left: 0; right: 0; bottom: 28px" aria-hidden="true">
+<div class="hint" style=${v.hintStyle}>
+<span>Scroll</span>
+<svg class="hint-arrow" viewBox="0 0 14 22" style="fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round"><path d="M7 1 V20 M1 14 L7 20 L13 14"></path></svg>
+</div>
+</div>
+</section>
+${(v.sections).map((sec) => html`
+<section class="sec" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 64px; padding: 88px clamp(20px, 4vw, 48px); text-align: center">
+<h2 class="word" aria-label=${sec.word}><span style="position: relative; display: inline-block"><span aria-hidden="true" style="visibility: hidden">${sec.word}</span><span aria-hidden="true" style="position: absolute; left: 0; top: 0; white-space: nowrap">${sec.typed}<span class="caret"></span></span></span></h2>
+<button class="icon-open" onClick=${sec.open} aria-label=${sec.cta}>
+<span class=${sec.pixClass} style="${sec.boxStyle}; display: block" aria-hidden="true">
+${(sec.cells).map((c) => html`
+<span class="pix" style=${c.style}></span>
+`)}
+</span>
+<span class="cta">${sec.cta}</span>
+</button>
+</section>
+`)}
+${v.modalOpen ? html`
+<div class="modal" tabIndex="-1" ref=${v.setModalRef} onKeyDown=${v.onKey} onKeyUp=${v.onKeyUp} role="dialog" aria-modal="true" aria-label=${v.modalTitle}>
+<div class=${v.sheetClass} style=${v.sheetStyle}>
+<div class="grabber-zone" onPointerDown=${v.sheetDown} onPointerMove=${v.sheetMove} onPointerUp=${v.sheetUp} onPointerCancel=${v.sheetUp}>
+<div class="grabber" aria-hidden="true"></div>
+<div class="panel-head" style="align-self: stretch">
+<h3 class="panel-title">${v.modalTitle}</h3>
+<button class="icon-btn" onClick=${v.closeModal} onPointerDown=${v.stopProp} aria-label="닫기"><span class="xm"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"><path d="M2 2 L10 10 M10 2 L2 10"></path></svg></span></button>
+</div>
+</div>
+${v.isPlay ? html`
+<div class="hud"><span>점수 ${v.g.score}</span><span>기회 ${v.g.lives}</span><span>최고 ${v.g.best}</span></div>
+<div class="game cq" onPointerMove=${v.gameMove} onPointerDown=${v.gameMove}>
+<div class="field">
+${(v.g.items).map((it) => html`
+<span class="spr" style=${it.style}></span>
+`)}
+<span class="spr" style=${v.g.basketStyle}></span>
+</div>
+${v.g.showCover ? html`
+<div class="game-over">
+<p style="margin: 0; font-family: Silkscreen, 'Courier New', monospace; font-size: 20px">${v.g.coverTitle}</p>
+<p class="note" style="opacity: 0.9">${v.g.coverText}</p>
+<button class="btn btn-primary" onClick=${v.startGame} style="padding: 0 32px">${v.g.startLabel}</button>
+</div>
+` : null}
+</div>
+<div class="pad">
+<button class="pad-btn" aria-label="왼쪽으로" onPointerDown=${v.padLeft} onPointerUp=${v.padStop} onPointerLeave=${v.padStop} onPointerCancel=${v.padStop}><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round"><path d="M15 5 L8 12 L15 19"></path></svg></button>
+<button class="pad-btn" aria-label="오른쪽으로" onPointerDown=${v.padRight} onPointerUp=${v.padStop} onPointerLeave=${v.padStop} onPointerCancel=${v.padStop}><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round"><path d="M9 5 L16 12 L9 19"></path></svg></button>
+</div>
+<p class="note">손가락으로 끌거나 버튼, 방향키로 바구니를 움직여 황금거북이를 받으세요. 현무암에 맞으면 기회가 줄어요.</p>
+` : null}
+${v.isSpace ? html`
+<p class="note">물건을 끌어서 원하는 자리로 옮겨보세요. 키보드는 물건을 고른 뒤 방향키로 움직여요.</p>
+<div class="room cq" style=${v.wallStyle}>
+<div class="room-field">
+<div class="floor-band"></div>
+${v.glowOn ? html`<div class="lamp-glow" style=${v.glowStyle}></div>` : null}
+${(v.roomItems).map((ri) => html`
+<button class=${ri.cls} style=${ri.boxStyle} aria-label=${ri.aria} onPointerDown=${ri.down} onPointerMove=${ri.move} onPointerUp=${ri.up} onPointerCancel=${ri.up} onKeyDown=${ri.key}><span class="spr" style=${ri.sprStyle}></span></button>
+`)}
+<div class="dim" style=${v.dimStyle}></div>
+</div>
+</div>
+<p class="group-label">아이템</p>
+<div class="group">
+<div class="chips">
+${(v.roomToggles).map((t) => html`
+<button class="chip" aria-pressed=${t.pressed} onClick=${t.toggle}>${t.label}</button>
+`)}
+</div>
+</div>
+<div class="group">
+<div class="cell"><span>벽 색</span>
+<div class="swatches">
+${(v.wallSwatches).map((w) => html`
+<button class="swatch" style=${w.style} aria-label=${w.label} aria-pressed=${w.pressed} onClick=${w.pick}></button>
+`)}
+</div>
+</div>
+<button class="cell switch-cell" role="switch" aria-checked=${v.lightChecked} onClick=${v.toggleLight}><span>불빛</span><span class="switch" aria-hidden="true"></span></button>
+<button class="cell link-cell" onClick=${v.resetRoom}>위치 초기화</button>
+</div>
+` : null}
+${v.isMake ? html`
+<div class="printer" role="img" aria-label=${v.mk.alt}>
+<span class="spr" style=${v.mk.nozzleStyle}></span>
+<div class="print-obj" style=${v.mk.boxStyle}>
+<div style=${v.mk.clipStyle}>
+<span class="spr" style=${v.mk.shapeStyle}></span>
+</div>
+${v.mk.printing ? html`<div class="print-line" style=${v.mk.lineStyle}></div>` : null}
+${v.mk.done ? html`<span class="spr" style=${v.mk.ringStyle}></span>` : null}
+</div>
+<div class="printer-bed"></div>
+</div>
+<p class="note" aria-live="polite">${v.mk.status}</p>
+<div class="group">
+<div class="cell"><span>모양</span>
+<div class="seg" role="group" aria-label="모양 선택">
+${(v.mk.shapes).map((sh) => html`
+<button class="seg-btn" aria-pressed=${sh.pressed} onClick=${sh.pick} disabled=${v.mk.busy}>${sh.label}</button>
+`)}
+</div>
+</div>
+<div class="cell"><span>필라멘트</span>
+<div class="swatches">
+${(v.mk.colors).map((cl) => html`
+<button class="swatch" style=${cl.style} aria-label=${cl.label} aria-pressed=${cl.pressed} onClick=${cl.pick} disabled=${v.mk.busy}></button>
+`)}
+</div>
+</div>
+</div>
+<button class="ios-btn" onClick=${v.mk.run} disabled=${v.mk.busy}>${v.mk.runLabel}</button>
+` : null}
+</div>
+</div>
+` : null}
+</div>`;
+  }
+}
+
+render(html`<${MendlelabApp} />`, document.getElementById('app'));
+</script>
+</body>
+</html>
